@@ -1,6 +1,8 @@
-import { Component, signal } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-
+import { catchError, map } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'login',
@@ -8,42 +10,44 @@ import { Router } from '@angular/router';
   standalone: false,
 })
 export class Login {
+  private httpService = inject(HttpClient);
+  private server = "http://localhost:3000";
+  // getUsers(){
+  //   return this.httpService.get(this.server + "/api/auth");
+  // }
+
+  constructor(private router: Router){}
   user = {
     email: '',
-    password: ''
+    password: '',
   }
-
-  constructor(private router: Router) {}
-  logins = [
-    {
-      email: "test@com",
-      password: "123"
-    },
-    {
-      email: "user1@example.com",
-      password: "password1"
-    },
-    {
-      email: "admin@domain.com",
-      password: "adminpass"
-    }
-  ];
-  onSubmit(){
-    console.log("Email: " + this.user.email);
-    console.log("Password: " + this.user.password);
-    let found = false
-    for(let i =0; i<this.logins.length; i++){
-        if(this.logins[i].email == this.user.email && this.logins[i].password == this.user.password){
-            found = true
-            break
+  onSubmit() {
+    const userData = {
+      email: this.user.email,
+      password: this.user.password
+    };
+    if(this.user.email != '' && this.user.password != ''){
+      // Send the login request using RxJS pipe and handle response
+      this.httpService.post(`${this.server}/api/auth`, userData).pipe(
+      map((response: any) => {
+        // Check if response is valid
+        if (response.valid) {
+          console.log('Login successful');
+          localStorage.setItem("username", response.username);
+          localStorage.setItem("birthdate", response.birthdate);
+          localStorage.setItem("age", response.age);
+          localStorage.setItem("email", response.email);
+          localStorage.setItem("valid", response.valid);
+          this.router.navigate(['/account']); // Navigate to account page
+        } else {
+          console.log('Invalid credentials');
         }
+      }),
+      catchError(error => {
+        console.error('Error during login:', error);
+        return of(null); // You can handle error in a way that suits your app
+      })
+      ).subscribe(); // Subscribe to the observable to trigger the HTTP request
     }
-
-    if(found){
-        this.router.navigate(['/account']);
-    }else{
-        console.log("error");
-    }
-    
   }
 }

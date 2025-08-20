@@ -1,1 +1,94 @@
-<p>HI</p>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        .user-info {
+            margin: 20px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            width: 300px;
+            border-radius: 5px;
+        }
+        .user-info h2 {
+            margin-top: 0;
+        }
+        .user-info p {
+            font-size: 16px;
+            margin: 5px 0;
+        }
+        .label {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>User Information</h1>
+
+    <!-- Displaying User Info dynamically using Angular Interpolation -->
+    <div class="user-info">
+        <h2>User Profile</h2>
+        <p><span class="label">Username:</span> {{ username }}</p>
+        <p><span class="label">Birthdate:</span> {{ birthdate }}</p>
+        <p><span class="label">Age:</span> {{ age }}</p>
+        <p><span class="label">Email:</span> {{ email }}</p>
+    </div>
+
+    <!-- Form for Updating Email and Password -->
+    <form (ngSubmit)="onSubmit()">
+        <label for="updatedUsername">Username</label>
+
+        <input
+          type="updatedUsername"
+          id="updatedUsername"
+          [(ngModel)]="userInfo.username"   
+          name="updatedUsername"
+          class="form-control"
+          placeholder="Username"
+          required
+        />
+
+        <label for="updatedBirthdate">Birthdate</label>
+        <input
+          type="updatedBirthdate"
+          id="updatedBirthdate"
+          [(ngModel)]="userInfo.birthdate"   
+          name="updatedBirthdate"
+          placeholder="Brith Date"
+          class="form-control"
+          required
+        />
+
+        <label for="updatedAge">Age</label>
+        <input
+          type="updatedAge"
+          id="updatedAge"
+          [(ngModel)]="userInfo.age"   
+          name="updatedAge"
+          class="form-control"
+          placeholder="Age"
+          required
+        />
+
+        <label for="updatedEmail">Email</label>
+        <input
+          type="updatedEmail"
+          id="updatedEmail"
+          [(ngModel)]="userInfo.email"   
+          name="updatedEmail"
+          class="form-control"
+          placeholder="Email"
+          required
+        />
+        
+        <button type="submit">Submit</button>
+    </form>
+    <button type="submit" (click)="logout()">Logout</button>
+</body>
+</html>
