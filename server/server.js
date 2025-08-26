@@ -91,9 +91,12 @@ io.on('connection', (socket) => {
   socket.on('loginSuccess', () => {
     console.log('Received');
     // Send back a response to the client if needed
-    socket.emit('response', 'Server: Logged in');
+    socket.emit('response', 'Server: You Have Logged in');
   });
 
+  socket.on('message', (message) => {
+    io.emit('response', message.username + ": " + message.message);
+  });
   socket.on('disconnect', () => {
     socket.emit('response', 'A user has disconnected')
   });

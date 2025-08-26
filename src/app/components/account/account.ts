@@ -88,23 +88,7 @@ export class Account {
 
   onSubmit(): void {
 
-    // Send the login request using RxJS pipe and handle the response
-    this.httpService.post(`${this.server}/api/chat`, this.userInfo).pipe(
-      map((response: any) => {
-        // Check if response is valid
-        if (response.valid) {
-          console.log("YES");
-        } else {
-          console.log('Invalid Message');
-        }
-      }),
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-      ).subscribe();  // Subscribe to trigger the HTTP request
-      this.message = this.messages[0];
-      console.log(this.messages);
+    this.socket.emit('message', this.userInfo);
   }
 
   logout(){
