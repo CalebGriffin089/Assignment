@@ -79,9 +79,6 @@ app.post('/api/auth', function(req, res) {
 // new api
 app.post('/api/chat', function(req, res){
   let {message, username} = req.body
-  if(username == null){
-    username = "No User";
-  }
   io.emit('response', username + ": " + message);
   res.json({valid: true});
 });
@@ -91,14 +88,14 @@ io.on('connection', (socket) => {
   console.log('A user connected');
 
   // Listen for the loginSuccess event
-  socket.on('loginSuccess', (message) => {
+  socket.on('loginSuccess', () => {
     console.log('Received');
     // Send back a response to the client if needed
-    socket.emit('response', 'Login success acknowledged');
+    socket.emit('response', 'Server: Logged in');
   });
 
   socket.on('disconnect', () => {
-    console.log('A user disconnected');
+    socket.emit('response', 'A user has disconnected')
   });
 });
 

@@ -71,6 +71,9 @@ export class Account {
     username: this.name
   }
   ngOnInit(): void {
+    if(this.userInfo.username == null){
+      this.userInfo.username = "No User";
+    }
     this.socket = io(this.server);  // Connect to the server
     this.socket.on('connect', () => {
     console.log('Socket connected');
@@ -112,6 +115,9 @@ export class Account {
   // Remember to disconnect the socket when the component is destroyed
   ngOnDestroy(): void {
     if (this.socket) {
+      this.userInfo.message = this.userInfo.username + " Has Left";
+      this.userInfo.username = "Server"
+      this.onSubmit();
       this.socket.disconnect();
     }
   }
