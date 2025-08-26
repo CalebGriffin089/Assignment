@@ -2,9 +2,25 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const http = require('http');
+const socketIo = require('socket.io');
+const { emit } = require('process');
+
+
 const app = express();
-app.use(cors());
+const corsOptions = {
+  origin: 'http://localhost:4200',  // Allow connections from Angular app
+  methods: ['GET', 'POST'],
+  allowedHeaders: ['Content-Type'],
+};
+
+app.use(cors(corsOptions));
 const server = http.Server(app);
+const io = socketIo(server, {
+  cors: {
+    origin: 'http://localhost:4200',  // Allow connections from Angular app
+    methods: ['GET', 'POST'],
+  }
+});
 // Middleware
 app.use(express.static(__dirname + '/www'));
 app.use(express.json());
@@ -46,15 +62,48 @@ app.post('/api/auth', function(req, res) {
   if (user) {
     user.upDateVlaid();
     user.removePwd();
+    
+    // Emit successful login to client via socket
+    io.emit('loginSuccess', `Welcome dfougjhbdpofgh!`);
+
+    // Send user data back as a response
     res.json(user);
   } else {
+    // Emit failed login attempt to clients
+    io.emit('loginFailed', `Failed login attempt for ${email}`);
+
     res.json({ valid: false });
   }
 });
+
+// new api
+app.post('/api/chat', function(req, res){
+  const {username} = req.body
+  io.emit('response', username);
+  res.json({valid: true});
+});
+
+
+io.on('connection', (socket) => {
+  console.log('A user connected');
+
+  // Listen for the loginSuccess event
+  socket.on('loginSuccess', (message) => {
+    console.log('Received');
+    // Send back a response to the client if needed
+    socket.emit('response', 'Login success acknowledged');
+  });
+
+  socket.on('disconnect', () => {
+    console.log('A user disconnected');
+  });
+});
+
 
 // Start server
 server.listen(3000, () => {
     console.log("My First Node Server");
     console.log("Server is listening on http://localhost:3000");
 });
+
 
