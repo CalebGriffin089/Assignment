@@ -29,13 +29,17 @@
 </head>
 <body>
 
-    <h1>User Information</h1>
+    <h1>Messages</h1>
 
     <!-- Displaying User Info dynamically using Angular Interpolation -->
     <div class="user-info">
-        <h2>User Profile</h2>
-        <p><span class="label">Username:</span> {{ username }}</p>
+        <div *ngFor="let item of messages">
+            {{ item }}
+        </div>
     </div>
+    <!-- <div class="user-info">
+        <p>{{ message }}</p>
+    </div>  -->
 
     <!-- Form for Updating Email and Password -->
     <form (ngSubmit)="onSubmit()">
@@ -44,7 +48,7 @@
         <input
           type="updatedUsername"
           id="updatedUsername"
-          [(ngModel)]="userInfo.username"   
+          [(ngModel)]="userInfo.message"   
           name="updatedUsername"
           class="form-control"
           placeholder="Username"

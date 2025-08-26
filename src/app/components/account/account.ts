@@ -63,14 +63,12 @@ export class Account {
 
   constructor(private httpService: HttpClient, private router: Router) {}
   messageNumb =0;
-  username = '';
-  birthdate = '';
-  age = '';
-  email = '';
-  valid = false;
-
+  messages : string[] = [];
+  message = '';
+  name = localStorage.getItem('username');
   userInfo = {
-    username: '',
+    message: '',
+    username: this.name
   }
   ngOnInit(): void {
     this.socket = io(this.server);  // Connect to the server
@@ -80,10 +78,8 @@ export class Account {
     });
 
     // Listen for server's response
-    this.socket.on('response', (message: string) => {
-      this.messageNumb +=1;
-        localStorage.setItem(String(this.messageNumb), message);
-        this.userInfo.username = message;
+    this.socket.on('response', (messageResponse: string) => {
+      this.messages.push(messageResponse);
     });
   }
 
@@ -104,7 +100,8 @@ export class Account {
         return of(null);  // Return null if there is an error
       })
       ).subscribe();  // Subscribe to trigger the HTTP request
-
+      this.message = this.messages[0];
+      console.log(this.messages);
   }
 
   logout(){

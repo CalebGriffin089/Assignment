@@ -78,8 +78,11 @@ app.post('/api/auth', function(req, res) {
 
 // new api
 app.post('/api/chat', function(req, res){
-  const {username} = req.body
-  io.emit('response', username);
+  let {message, username} = req.body
+  if(username == null){
+    username = "No User";
+  }
+  io.emit('response', username + ": " + message);
   res.json({valid: true});
 });
 
