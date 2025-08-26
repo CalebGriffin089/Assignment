@@ -3,17 +3,11 @@ const cors = require('cors');
 const path = require('path');
 const http = require('http');
 const socketIo = require('socket.io');
-const { emit } = require('process');
 
 
 const app = express();
-const corsOptions = {
-  origin: 'http://localhost:4200',  // Allow connections from Angular app
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type'],
-};
 
-app.use(cors(corsOptions));
+app.use(cors());
 const server = http.Server(app);
 const io = socketIo(server, {
   cors: {

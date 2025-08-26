@@ -51,7 +51,7 @@ export class Login {
             localStorage.setItem("age", response.age);
             localStorage.setItem("email", response.email);
             localStorage.setItem("valid", response.valid);
-            this.router.navigate(['/account']);  // Navigate to the account page
+            this.router.navigate(['/chat']);  // Navigate to the account page
 
             // Emit login success to the server (if needed)
             this.socket.emit('loginSuccess', `Welcome ${response.username}`);

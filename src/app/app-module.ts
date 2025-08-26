@@ -6,13 +6,13 @@ import { provideHttpClient } from '@angular/common/http';
 import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { Login } from './components/login/login';
-import { Account } from './components/account/account';
+import { Chat } from './components/chat/chat';
 
 @NgModule({
   declarations: [
     App,
     Login, 
-    Account
+    Chat
   ],
   imports: [
     BrowserModule,
