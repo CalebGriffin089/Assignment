@@ -1,106 +1,102 @@
-const express = require('express');
-const cors = require('cors');
-const path = require('path');
-const http = require('http');
-const socketIo = require('socket.io');
+  const express = require('express');
+  const cors = require('cors');
+  const path = require('path');
+  const http = require('http');
+  const socketIo = require('socket.io');
 
 
-const app = express();
-
-app.use(cors());
-const server = http.Server(app);
-const io = socketIo(server, {
-  cors: {
-    origin: 'http://localhost:4200',  // Allow connections from Angular app
-    methods: ['GET', 'POST'],
-  }
-});
-// Middleware
-app.use(express.static(__dirname + '/www'));
-app.use(express.json());
-
-class User{
-    constructor(username, birthdate, age, email, password, valid){
-        this.username = username;
-        this.birthdate = birthdate;
-        this.age = age;
-        this.email = email;
-        this.password = password;
-        this.valid = valid;
+  const app = express();
+  const listen = require("./listen.js")
+  app.use(cors());
+  const server = http.Server(app);
+  const io = socketIo(server, {
+    cors: {
+      origin: 'http://localhost:4200',  // Allow connections from Angular app
+      methods: ['GET', 'POST'],
     }
-    upDateVlaid(){
-        this.valid = true;
-    }
+  });
+  // Middleware
+  app.use(express.static(__dirname + '/www'));
+  app.use(express.json());
 
-    removePwd(){
-        this.password = '';
-    }
-}
+  class User{
+      constructor(username, birthdate, age, email, password, valid){
+          this.username = username;
+          this.birthdate = birthdate;
+          this.age = age;
+          this.email = email;
+          this.password = password;
+          this.valid = valid;
+      }
+      upDateVlaid(){
+          this.valid = true;
+      }
 
-// API endpoint
-app.post('/api/auth', function(req, res) {
-  const {email, password} = req.body;
-  if (!email || !password) {
-    return res.status(400).json({ message: 'Email and password are required' });
+      removePwd(){
+          this.password = '';
+      }
   }
 
-  const users = [
-    new User("Test", '09/02/09', 16, "test@com.au", "123", false),
-    new User("JaneSmith", '03/22/1985', 40, 'jane.smith@example.com', 'mypassword!', false),
-    new User("JohnDoe", '01/15/1990', 35, 'john.doe@example.com', 'password123', false)
-  ];
+  // API endpoint
+  app.post('/api/auth', function(req, res) {
+    const {email, password} = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
 
-  // Check if user exists and passwords match
-  const user = users.find(u => u.email == email && u.password == password);
+    const users = [
+      new User("Test", '09/02/09', 16, "test@com.au", "123", false),
+      new User("JaneSmith", '03/22/1985', 40, 'jane.smith@example.com', 'mypassword!', false),
+      new User("JohnDoe", '01/15/1990', 35, 'john.doe@example.com', 'password123', false)
+    ];
 
-  if (user) {
-    user.upDateVlaid();
-    user.removePwd();
-    
-    // Emit successful login to client via socket
-    io.emit('loginSuccess', `Welcome dfougjhbdpofgh!`);
+    // Check if user exists and passwords match
+    const user = users.find(u => u.email == email && u.password == password);
 
-    // Send user data back as a response
-    res.json(user);
-  } else {
-    // Emit failed login attempt to clients
-    io.emit('loginFailed', `Failed login attempt for ${email}`);
+    if (user) {
+      user.upDateVlaid();
+      user.removePwd();
+      
+      // Emit successful login to client via socket
+      io.emit('loginSuccess', `Welcome dfougjhbdpofgh!`);
 
-    res.json({ valid: false });
-  }
-});
+      // Send user data back as a response
+      res.json(user);
+    } else {
+      // Emit failed login attempt to clients
+      io.emit('loginFailed', `Failed login attempt for ${email}`);
 
-// new api
-app.post('/api/chat', function(req, res){
-  let {message, username} = req.body
-  io.emit('response', username + ": " + message);
-  res.json({valid: true});
-});
-
-
-io.on('connection', (socket) => {
-  console.log('A user connected');
-
-  // Listen for the loginSuccess event
-  socket.on('loginSuccess', () => {
-    console.log('Received');
-    // Send back a response to the client if needed
-    socket.emit('response', 'Server: You Have Logged in');
+      res.json({ valid: false });
+    }
   });
 
-  socket.on('message', (message) => {
-    io.emit('response', message.username + ": " + message.message);
+  // new api
+  app.post('/api/chat', function(req, res){
+    let {message, username} = req.body
+    io.emit('response', username + ": " + message);
+    res.json({valid: true});
   });
-  socket.on('disconnect', () => {
-    socket.emit('response', 'A user has disconnected')
+
+
+  io.on('connection', (socket) => {
+    console.log('A user connected');
+
+    // Listen for the loginSuccess event
+    socket.on('loginSuccess', () => {
+      console.log('Received');
+      // Send back a response to the client if needed
+      socket.emit('response', 'Server: You Have Logged in');
+    });
+
+    socket.on('message', (message) => {
+      io.emit('response', message.username + ": " + message.message);
+    });
+    socket.on('disconnect', () => {
+      socket.emit('response', 'A user has disconnected')
+    });
   });
-});
 
 
-// Start server
-server.listen(3000, () => {
-    console.log("My First Node Server");
-    console.log("Server is listening on http://localhost:3000");
-});
-
+  // Start server
+  listen(server)
 
