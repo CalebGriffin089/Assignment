@@ -10,7 +10,7 @@ module.exports = function handleConnection(io){
     });
 
     socket.on('message', (message) => {
-      io.emit('response', message.username + ": " + message.message);
+      io.emit('response', message);
     });
     socket.on('disconnect', () => {
       socket.emit('response', 'A user has disconnected')

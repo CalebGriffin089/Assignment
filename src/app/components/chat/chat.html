@@ -31,32 +31,14 @@
 
     <h1>Messages</h1>
 
-    <!-- Displaying User Info dynamically using Angular Interpolation -->
-    <div class="user-info">
-        <div *ngFor="let item of messages">
-            {{ item }}
-        </div>
-    </div>
-    <!-- <div class="user-info">
-        <p>{{ message }}</p>
-    </div>  -->
+    <input type="text" [ngModel]="messageOut()" (ngModelChange)="messageOut.set($event)" name="messageOut" id="messageOut"/>
+    <button (click)="send()">Submit</button>
 
-    <!-- Form for Updating Email and Password -->
-    <form (ngSubmit)="onSubmit()">
-        <label for="updatedUsername">Message</label>
-
-        <input
-          type="updatedUsername"
-          id="updatedUsername"
-          [(ngModel)]="userInfo.message"   
-          name="updatedUsername"
-          class="form-control"
-          placeholder="Message"
-          required
-        />
-        
-        <button type="submit">Submit</button>
-    </form>
-    <button type="submit" (click)="logout()">Logout</button>
+<!-- Display received messages -->
+<div *ngIf="messageIn().length > 0">
+  <div *ngFor="let msg of messageIn()">
+    <p>{{ msg }}</p>
+  </div>
+</div>
 </body>
 </html>
