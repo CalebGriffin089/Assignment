@@ -4,10 +4,11 @@
   const http = require('http');
   const socketIo = require('socket.io');
 
-
+  const fs = require('fs');
   const app = express();
   const listen = require("./listen.js")
-  const sockets = require("./socket.js")
+  const sockets = require("./socket.js");
+const { group } = require('console');
   app.use(cors());
   const server = http.Server(app);
   const io = socketIo(server, {
@@ -40,41 +41,81 @@
 
   // API endpoint
   app.post('/api/auth', function(req, res) {
-    const {email, password} = req.body;
-    if (!email || !password) {
-      return res.status(400).json({ message: 'Email and password are required' });
-    }
-
-    const users = [
-      new User("Test", '09/02/09', 16, "test@com.au", "123", false),
-      new User("JaneSmith", '03/22/1985', 40, 'jane.smith@example.com', 'mypassword!', false),
-      new User("JohnDoe", '01/15/1990', 35, 'john.doe@example.com', 'password123', false)
-    ];
-
     // Check if user exists and passwords match
-    const user = users.find(u => u.email == email && u.password == password);
+    fs.readFile("users.txt", "utf8", (err, data) => {
+      if (err) {
+        console.log("Error reading file");
+        return;
+      }
 
-    if (user) {
-      user.upDateVlaid();
-      user.removePwd();
-      
-      // Emit successful login to client via socket
-      io.emit('loginSuccess', `Welcome dfougjhbdpofgh!`);
-
-      // Send user data back as a response
-      res.json(user);
-    } else {
-      // Emit failed login attempt to clients
-      io.emit('loginFailed', `Failed login attempt for ${email}`);
-
-      res.json({ valid: false });
-    }
+      let fileData = [];
+      try {
+        fileData = JSON.parse(data); // Parse existing user data
+      } catch (err) {
+        console.log("Error parsing JSON data");
+      } 
+      user = false;
+      for(let i =0; i <fileData.length; i++){
+        if(fileData[i].username === req.body.username && fileData[i].password === req.body.password){
+          user = fileData[i]
+          user.valid = true;
+          break;
+        }
+      }
+      console.log(req.body.username);
+      console.log(req.body.password);
+      if(user){
+        res.json(user);
+      }else{
+        res.json({ valid: false });
+      }
+    });
   });
+
+app.post('/api/create', function(req, res) {
+    const user = {
+      id: null,
+      username: req.body.username,
+      email: req.body.email,
+      password: req.body.password,
+      group:[],
+      roles: [],
+    }
+    file = [];
+    fs.readFile("users.txt", "utf8", (err, data) => {
+    if (err) {
+      console.log("Error reading file");
+      return;
+    }
+
+    let fileData = [];
+    try {
+      fileData = JSON.parse(data); // Parse existing user data
+    } catch (err) {
+      console.log("Error parsing JSON data");
+    }
+
+    // Add new user to the array
+    user.id = parseInt(fileData[fileData.length-1].id)+1;
+    fileData.push(user);
+
+    // Write updated data back to the file
+    fs.writeFile("users.txt", JSON.stringify(fileData, null, 2), "utf8", (err) => {
+      if (err) {
+        console.log("Error writing to file");
+        return;
+      }
+      console.log("user Registered");
+      res.json({ valid: true });
+    });
+  });
+});
+
 
 sockets(io)
 
 
 
-  // Start server
-  listen(server)
+// Start server
+listen(server)
 

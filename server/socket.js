@@ -4,7 +4,7 @@ module.exports = function handleConnection(io){
 
     // Listen for the loginSuccess event
     socket.on('loginSuccess', () => {
-      console.log('Received');
+      console.log('User Logged In');
       // Send back a response to the client if needed
       socket.emit('response', 'Server: You Have Logged in');
     });
