@@ -27,4 +27,10 @@ export class Sockets {
     })
     return temp
   }
+
+  joinRoom(rooms:string[]){
+    rooms.forEach(room => {
+      this.socket.emit('joinRoom', room);
+    });
+  }
 }

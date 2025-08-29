@@ -62,10 +62,10 @@ const { group } = require('console');
           break;
         }
       }
-      console.log(req.body.username);
-      console.log(req.body.password);
+      
       if(user){
         res.json(user);
+        console.log(user);
       }else{
         res.json({ valid: false });
       }
@@ -111,6 +111,47 @@ app.post('/api/create', function(req, res) {
   });
 });
 
+app.post('/api/join', function(req, res){
+  const user = {
+    id: req.body.id,
+    group: req.body.group,
+  }
+  console.log("Groups: "+ user.group);
+
+  fs.readFile("users.txt", "utf8", (err, data) => {
+    if (err) {
+      console.log("Error reading file");
+      return;
+    }
+
+    let fileData = [];
+    try {
+      fileData = JSON.parse(data); // Parse existing user data
+    } catch (err) {
+      console.log("Error parsing JSON data");
+    }
+
+    for(let i =0; i <fileData.length; i++){
+        if(parseInt(fileData[i].id) == parseInt(user.id)){
+          for(let j =0; j<user.group.length;j++){
+            fileData[i].group.push(user.group[j]);
+          }
+          console.log(user.group);
+          break;
+        }
+      }
+
+    // Write updated data back to the file
+    fs.writeFile("users.txt", JSON.stringify(fileData, null, 2), "utf8", (err) => {
+      if (err) {
+        console.log("Error writing to file");
+        return;
+      }
+      console.log("user Registered");
+      res.json({ valid: true });
+    });
+  });
+});
 
 sockets(io)
 

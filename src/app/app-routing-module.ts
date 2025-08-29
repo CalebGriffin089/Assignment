@@ -3,7 +3,8 @@ import { RouterModule, Routes } from '@angular/router';
 
 import { Chat } from './components/chat/chat';
 import { Login } from './components/login/login';
-
+import { Create } from './components/create/create';
+import { JoinGroups } from './components/joinGroups/joinGroups';
 const routes: Routes = [
   {
     path: '',
@@ -14,7 +15,17 @@ const routes: Routes = [
     path: 'chat',
     component: Chat, 
     title:"Chat"
-  }
+  },
+  {
+    path: 'create',
+    component: Create, 
+    title:"Create"
+  },
+  {
+    path: 'joinGroups',
+    component: JoinGroups, 
+    title:"joinGroups"
+  },
 ];
 
 @NgModule({

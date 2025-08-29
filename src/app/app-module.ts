@@ -7,12 +7,15 @@ import { AppRoutingModule } from './app-routing-module';
 import { App } from './app';
 import { Login } from './components/login/login';
 import { Chat } from './components/chat/chat';
-
+import { Create } from './components/create/create';
+import { JoinGroups } from './components/joinGroups/joinGroups';
 @NgModule({
   declarations: [
     App,
     Login, 
-    Chat
+    Chat,
+    Create,
+    JoinGroups
   ],
   imports: [
     BrowserModule,

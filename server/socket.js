@@ -8,6 +8,9 @@ module.exports = function handleConnection(io){
       // Send back a response to the client if needed
       socket.emit('response', 'Server: You Have Logged in');
     });
+    socket.on('joinRoom', (room) => {
+      socket.join(room);
+    });
 
     socket.on('message', (message) => {
       io.emit('response', message);

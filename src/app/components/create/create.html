@@ -1,14 +1,23 @@
 <form (ngSubmit)="onSubmit()">
-  <label for="email">username</label>
+  <label for="email">Username</label>
+  <input
+    type="text"
+    id="username"
+    [(ngModel)]="user.username"
+    name="username"
+    class="form-control"
+    required
+  />
+  <label for="email">Email</label>
   <input
     type="text"
     id="email"
-    [(ngModel)]="user.username"
+    [(ngModel)]="user.email"
     name="email"
     class="form-control"
     required
   />
-
+  <label for="password">Password</label>
   <input
     type="password"
     id="password"
