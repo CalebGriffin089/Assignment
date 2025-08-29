@@ -9,6 +9,7 @@
   const listen = require("./listen.js")
   const sockets = require("./socket.js");
 const { group } = require('console');
+const { userInfo } = require('os');
   app.use(cors());
   const server = http.Server(app);
   const io = socketIo(server, {
@@ -64,6 +65,7 @@ const { group } = require('console');
       }
       
       if(user){
+        console.log(user);
         res.json(user);
         console.log(user);
       }else{

@@ -19,10 +19,11 @@ export class Chat{
   messageIn = signal<string[]>([]);
 
   ngOnInit(){
+    console.log(localStorage.getItem("groups"));
     if(!localStorage.getItem("valid")){
       this.router.navigate(['/']);
     }
-     let storedGroups = localStorage.getItem("groups");
+    let storedGroups = localStorage.getItem("groups");
     let groups = []
     // If 'groups' exists in localStorage and is not null or 'undefined'
     if (storedGroups && storedGroups !== "undefined") {
@@ -35,7 +36,7 @@ export class Chat{
       }
     }
     console.log(groups);
-    this.socketService.joinRoom(groups)
+    // this.socketService.joinRoom(groups)
     this.socketService.onMessage().subscribe(
       (msg) =>{
         this.messageIn.update((msgs)=>[...msgs, msg])
