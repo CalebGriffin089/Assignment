@@ -40,5 +40,13 @@
     <p>{{ msg }}</p>
   </div>
 </div>
+
+<div *ngIf="groups.length > 0">
+  <button *ngFor="let msg of groups; let i = index" (click)="selectGroup(msg)">
+    {{ msg }}
+  </button>
+</div>
+
+
 </body>
 </html>

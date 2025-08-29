@@ -34,7 +34,7 @@ export class Login {
             localStorage.setItem("password", response.password);
             localStorage.setItem("email", response.email);
             localStorage.setItem("roles", response.roles);
-            localStorage.setItem("groups", response.groups);
+            localStorage.setItem("groups", JSON.stringify(response.group));
             localStorage.setItem("valid", response.valid);
             this.router.navigate(['/chat']);  // Navigate to the account page
 
@@ -50,7 +50,6 @@ export class Login {
       ).subscribe();  // Subscribe to trigger the HTTP request
     }
   }
-
   // Remember to disconnect the socket when the component is destroyed
 }
 

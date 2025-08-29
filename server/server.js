@@ -43,7 +43,7 @@ const { userInfo } = require('os');
   // API endpoint
   app.post('/api/auth', function(req, res) {
     // Check if user exists and passwords match
-    fs.readFile("users.txt", "utf8", (err, data) => {
+    fs.readFile("./data/users.txt", "utf8", (err, data) => {
       if (err) {
         console.log("Error reading file");
         return;
@@ -65,9 +65,7 @@ const { userInfo } = require('os');
       }
       
       if(user){
-        console.log(user);
         res.json(user);
-        console.log(user);
       }else{
         res.json({ valid: false });
       }
@@ -84,7 +82,7 @@ app.post('/api/create', function(req, res) {
       roles: [],
     }
     file = [];
-    fs.readFile("users.txt", "utf8", (err, data) => {
+    fs.readFile("./data/users.txt", "utf8", (err, data) => {
     if (err) {
       console.log("Error reading file");
       return;
@@ -102,7 +100,7 @@ app.post('/api/create', function(req, res) {
     fileData.push(user);
 
     // Write updated data back to the file
-    fs.writeFile("users.txt", JSON.stringify(fileData, null, 2), "utf8", (err) => {
+    fs.writeFile("./data/users.txt", JSON.stringify(fileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing to file");
         return;
@@ -120,7 +118,7 @@ app.post('/api/join', function(req, res){
   }
   console.log("Groups: "+ user.group);
 
-  fs.readFile("users.txt", "utf8", (err, data) => {
+  fs.readFile("./data/users.txt", "utf8", (err, data) => {
     if (err) {
       console.log("Error reading file");
       return;
@@ -144,7 +142,7 @@ app.post('/api/join', function(req, res){
       }
 
     // Write updated data back to the file
-    fs.writeFile("users.txt", JSON.stringify(fileData, null, 2), "utf8", (err) => {
+    fs.writeFile("./data/users.txt", JSON.stringify(fileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing to file");
         return;

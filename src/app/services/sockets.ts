@@ -15,8 +15,8 @@ export class Sockets {
     this.socket = io(this.apiServer);
   }
 
-  sendMessage(msg:string){
-    this.socket.emit("message", msg)
+  sendMessage(msg:string, room:string){
+    this.socket.emit("message", msg, room)
   }
 
   onMessage():Observable<string>{
@@ -28,9 +28,12 @@ export class Sockets {
     return temp
   }
 
-  joinRoom(rooms:string[]){
-    rooms.forEach(room => {
-      this.socket.emit('joinRoom', room);
-    });
+  joinRoom(rooms:string){
+     this.socket.emit('joinRoom', rooms);
   }
+
+  findRooms(){
+    this.socket.emit('rooms');
+  }
+
 }

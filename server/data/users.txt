@@ -24,7 +24,9 @@
     "username": "Hi",
     "email": "Hi@1",
     "password": "123",
-    "group": [],
+    "group": [
+      "d"
+    ],
     "roles": []
   }
 ]
