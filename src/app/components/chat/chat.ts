@@ -22,9 +22,20 @@ export class Chat{
   members = [];
   currentGroup = '';
   groups = [];
+  isAdmin = false;
   ngOnInit(){
     if(!localStorage.getItem("valid")){
       this.router.navigate(['/']);
+    }
+
+    let roles = localStorage.getItem('roles') || ""; // fallback to empty string
+    let rolesArray = roles.split(","); // splits into ["admin", "user", "moderator"]
+
+    console.log(rolesArray);
+
+    // Example check if admin exists
+    if (rolesArray.includes("admin")) {
+      this.isAdmin = true;
     }
 
     this.httpService.post(`${this.server}/api/getGroups`, {username: localStorage.getItem('username')}).pipe(
@@ -147,6 +158,7 @@ export class Chat{
         return of(null);  // Return null if there is an error
       })
     ).subscribe();
+    window.location.reload();
   }
 
   deleteChannel(){

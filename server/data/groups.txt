@@ -2,7 +2,9 @@
   {
     "id": 0,
     "channels": [
-      "fd"
+      "fd",
+      "Test",
+      "Test2"
     ],
     "admins": [
       "test@com.au",
@@ -10,7 +12,8 @@
     ],
     "banned": [],
     "members": [
-      "Hi"
+      "Hi",
+      "Hi3"
     ]
   },
   {

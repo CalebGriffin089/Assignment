@@ -5,7 +5,9 @@
     "email": "df",
     "password": "123",
     "groups": [],
-    "roles": []
+    "roles": [
+      "user"
+    ]
   },
   {
     "id": 2,
@@ -13,12 +15,27 @@
     "email": "2",
     "password": "123",
     "groups": [],
-    "roles": []
+    "roles": [
+      "user"
+    ]
   },
   {
     "id": 3,
     "username": "Hi",
     "email": "12",
+    "password": "12",
+    "groups": [
+      "0"
+    ],
+    "roles": [
+      "admin",
+      "user"
+    ]
+  },
+  {
+    "id": 4,
+    "username": "Hi3",
+    "email": "s",
     "password": "12",
     "groups": [
       "0"
