@@ -8,10 +8,11 @@
       "test@com.au",
       "Hi"
     ],
-    "banned": null,
-    "members": [
-      "test@com.au",
+    "banned": [
       "Hi"
+    ],
+    "members": [
+      "Hi2"
     ]
   }
 ]

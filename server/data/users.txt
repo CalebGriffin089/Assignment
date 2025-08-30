@@ -1,18 +1,16 @@
 [
   {
-    "id": 0,
-    "username": "Hi",
-    "email": "2",
+    "id": 1,
+    "username": "Hi2",
+    "email": "df",
     "password": "123",
-    "groups": [
-      "1"
-    ],
+    "groups": [],
     "roles": []
   },
   {
-    "id": 0,
-    "username": "test@com.au",
-    "email": "s",
+    "id": 2,
+    "username": "Hi",
+    "email": "2",
     "password": "123",
     "groups": [],
     "roles": []

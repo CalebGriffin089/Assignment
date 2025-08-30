@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component, inject, signal, OnInit, CSP_NONCE } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, connect, map } from 'rxjs/operators';
 import { of } from 'rxjs';
@@ -19,6 +19,8 @@ export class Chat{
   messageOut = signal("");
   messageIn = signal<string[]>([]);
   channels = [];
+  members = [];
+  currentGroup = '';
   groups = [];
   ngOnInit(){
     if(!localStorage.getItem("valid")){
@@ -59,12 +61,36 @@ export class Chat{
   }
 
   selectGroup(msg: any) {
+    this.currentGroup = msg;
     //get channels for a group
     this.httpService.post(`${this.server}/api/getChannels`, {id: msg}).pipe(
     map((response: any) => {
         // Check if response is valid
         this.channels = response.channels;
+        this.members = response.members;
         localStorage.setItem('channels', response.channels);
+        localStorage.setItem('members', response.members);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+  }
+  selectedMember = '';
+  selectMember(msg: any){
+    this.selectedMember = msg;
+  }
+
+  banUser(){
+    console.log(this.selectedMember)
+    this.httpService.post(`${this.server}/api/ban`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        this.channels = response.channels;
+        this.members = response.members;
+        localStorage.setItem('channels', response.channels);
+        localStorage.setItem('members', response.members);
       }),
       catchError((error) => {
         console.error('Error during login:', error);

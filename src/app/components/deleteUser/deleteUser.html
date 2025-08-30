@@ -1,0 +1,15 @@
+<form (ngSubmit)="onSubmit()">
+  <label for="username">Username</label>
+  <input
+    type="text"
+    id="username"
+    [(ngModel)]="user.username"
+    name="username"
+    class="form-control"
+    required
+  />
+
+  <p *ngIf="response">{{ response }}</p> <!-- Display response message -->
+
+  <button type="submit">Delete User</button>
+</form>

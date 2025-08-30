@@ -10,6 +10,7 @@ import { Chat } from './components/chat/chat';
 import { Create } from './components/create/create';
 import { JoinGroups } from './components/joinGroups/joinGroups';
 import { CreateGroup } from './components/createGroups/createGroups';
+import { DeleteUser } from './components/deleteUser/deleteUser';
 @NgModule({
   declarations: [
     App,
@@ -17,7 +18,8 @@ import { CreateGroup } from './components/createGroups/createGroups';
     Chat,
     Create,
     JoinGroups, 
-    CreateGroup
+    CreateGroup,
+    DeleteUser
   ],
   imports: [
     BrowserModule,

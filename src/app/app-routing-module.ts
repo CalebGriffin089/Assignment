@@ -6,6 +6,7 @@ import { Login } from './components/login/login';
 import { Create } from './components/create/create';
 import { JoinGroups } from './components/joinGroups/joinGroups';
 import { CreateGroup } from './components/createGroups/createGroups';
+import { DeleteUser } from './components/deleteUser/deleteUser';
 const routes: Routes = [
   {
     path: '',
@@ -31,6 +32,11 @@ const routes: Routes = [
     path: 'createGroups',
     component: CreateGroup, 
     title:"createGroups"
+  },
+  {
+    path: 'deleteUser',
+    component: DeleteUser, 
+    title:"deleteUser"
   },
 ];
 

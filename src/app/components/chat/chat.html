@@ -55,9 +55,18 @@
     {{ msg }}
   </button>
 </div>
-
 <div>
   <p> Current Channel: {{ selectedChannel }}</p>
+</div>
+<label>Members:</label>
+<div *ngIf="members.length > 0">
+  <button *ngFor="let msg of members; let i = index" (click)="selectMember(msg)">
+    {{ msg }}
+  </button>
+</div>
+
+<div>
+  <button (click)="banUser()">{{selectedMember}}</button>
 </div>
 
 
