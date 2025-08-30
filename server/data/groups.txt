@@ -1,0 +1,17 @@
+[
+  {
+    "id": 0,
+    "channels": [
+      "fd"
+    ],
+    "admins": [
+      "test@com.au",
+      "Hi"
+    ],
+    "banned": null,
+    "members": [
+      "test@com.au",
+      "Hi"
+    ]
+  }
+]

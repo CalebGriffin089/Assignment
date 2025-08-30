@@ -9,13 +9,15 @@ import { Login } from './components/login/login';
 import { Chat } from './components/chat/chat';
 import { Create } from './components/create/create';
 import { JoinGroups } from './components/joinGroups/joinGroups';
+import { CreateGroup } from './components/createGroups/createGroups';
 @NgModule({
   declarations: [
     App,
     Login, 
     Chat,
     Create,
-    JoinGroups
+    JoinGroups, 
+    CreateGroup
   ],
   imports: [
     BrowserModule,

@@ -1,0 +1,21 @@
+<form (ngSubmit)="onSubmit()">
+  <label for="email">Base Channel</label>
+  <input
+    type="text"
+    id="email"
+    [(ngModel)]="groupData.channels"
+    name="email"
+    class="form-control"
+    required
+  />
+  <label for="password">Admin</label>
+  <input
+    type="password"
+    id="password"
+    [(ngModel)]="groupData.admins"
+    name="password"
+    class="form-control"
+    required
+  />
+  <button type="submit">Create</button>
+</form>

@@ -1,32 +1,20 @@
 [
   {
-    "id": "1",
-    "username": "test@com.au",
-    "email": "Test",
+    "id": 0,
+    "username": "Hi",
+    "email": "2",
     "password": "123",
-    "group": [
-      "d",
-      "dd",
-      "dds",
-      "dds",
-      "dds",
-      "d",
-      "dd",
-      "dds",
-      "dds",
-      "dds",
-      "df"
+    "groups": [
+      "1"
     ],
     "roles": []
   },
   {
-    "id": 3,
-    "username": "Hi",
-    "email": "Hi@1",
+    "id": 0,
+    "username": "test@com.au",
+    "email": "s",
     "password": "123",
-    "group": [
-      "d"
-    ],
+    "groups": [],
     "roles": []
   }
 ]

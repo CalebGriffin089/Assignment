@@ -40,11 +40,24 @@
     <p>{{ msg }}</p>
   </div>
 </div>
-
+<br>
+<label>Groups:</label>
 <div *ngIf="groups.length > 0">
   <button *ngFor="let msg of groups; let i = index" (click)="selectGroup(msg)">
     {{ msg }}
   </button>
+</div>
+
+<br>
+<label>Channels:</label>
+<div *ngIf="channels.length > 0">
+  <button *ngFor="let msg of channels; let i = index" (click)="selectChannel(msg)">
+    {{ msg }}
+  </button>
+</div>
+
+<div>
+  <p> Current Channel: {{ selectedChannel }}</p>
 </div>
 
 

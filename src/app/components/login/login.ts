@@ -34,7 +34,7 @@ export class Login {
             localStorage.setItem("password", response.password);
             localStorage.setItem("email", response.email);
             localStorage.setItem("roles", response.roles);
-            localStorage.setItem("groups", JSON.stringify(response.group));
+            localStorage.setItem("groups", JSON.stringify(response.groups));
             localStorage.setItem("valid", response.valid);
             this.router.navigate(['/chat']);  // Navigate to the account page
 

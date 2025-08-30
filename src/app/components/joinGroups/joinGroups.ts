@@ -17,9 +17,7 @@ export class JoinGroups{
   constructor(private router: Router, private httpService: HttpClient) {}
   messageOut = signal("");
   messageIn = signal<string[]>([]);
-  user = {
-    username : ''
-  }
+  groupName = '';
   ngOnInit(){
     if(!localStorage.getItem("valid")){
       this.router.navigate(['/']);
@@ -44,12 +42,14 @@ export class JoinGroups{
   }
 
   // Add this.user to the groups array (make sure this.user is an object, not an array)
-  groups.push(this.user.username);
+  groups.push(this.groupName);
   // Store the updated array back in localStorage
   localStorage.setItem('groups', JSON.stringify(groups));
   let userData = {
     id: localStorage.getItem('id'),
-    group: groups
+    groups: groups,
+    username: localStorage.getItem('username'),
+    newGroup: this.groupName
   }
   this.httpService.post(`${this.server}/api/join`, userData).pipe(
     map((response: any) => {
