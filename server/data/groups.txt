@@ -8,11 +8,22 @@
       "test@com.au",
       "Hi"
     ],
-    "banned": [
+    "banned": [],
+    "members": [
+      "Hi"
+    ]
+  },
+  {
+    "id": 1,
+    "channels": [
+      "main"
+    ],
+    "admins": [
       "Hi"
     ],
+    "banned": [],
     "members": [
-      "Hi2"
+      "Hi"
     ]
   }
 ]

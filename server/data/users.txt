@@ -9,10 +9,20 @@
   },
   {
     "id": 2,
-    "username": "Hi",
+    "username": "Test",
     "email": "2",
     "password": "123",
     "groups": [],
+    "roles": []
+  },
+  {
+    "id": 3,
+    "username": "Hi",
+    "email": "12",
+    "password": "12",
+    "groups": [
+      "0"
+    ],
     "roles": []
   }
 ]

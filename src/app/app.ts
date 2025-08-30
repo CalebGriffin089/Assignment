@@ -1,27 +1,18 @@
-import { Component, signal, OnInit } from '@angular/core';
-import { Sockets } from './services/sockets';
-import { inject } from '@angular/core';
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+
 @Component({
   selector: 'app-root',
   templateUrl: './app.html',
   standalone: false,
-  styleUrl: './app.css'
+  styleUrls: ['./app.css']
 })
 export class App {
-//  private socketService = inject(Sockets)
-//   messageOut = signal("");
-//   messageIn = signal<string[]>([]);
+  constructor(private router: Router) {}
 
-//   ngOnInit(){
-//     this.socketService.onMessage().subscribe(
-//       (msg) =>{
-//         this.messageIn.update((msgs)=>[...msgs, msg])
-//       }
-//     );
-//   }
-
-//   send(){
-//     this.socketService.sendMessage(this.messageOut());
-//     this.messageOut.set('');
-//   }
+  logout() {
+    localStorage.clear();           // Clear localStorage
+    this.router.navigate(['/']); // Navigate to login page
+  }
 }
+

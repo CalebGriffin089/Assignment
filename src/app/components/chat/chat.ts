@@ -26,17 +26,19 @@ export class Chat{
     if(!localStorage.getItem("valid")){
       this.router.navigate(['/']);
     }
-    let storedGroups = localStorage.getItem("groups");
-    // If 'groups' exists in localStorage and is not null or 'undefined'
-    if (storedGroups && storedGroups !== "undefined") {
-      try {
-        // Parse stored groups, ensuring it's an array or fallback to an empty array
-        this.groups = JSON.parse(storedGroups);
-      } catch (error) {
-        console.error("Error parsing groups from localStorage", error);
-        this.groups = [];  // Fallback to an empty array if the parsing fails
-      }
-    }
+
+    this.httpService.post(`${this.server}/api/getGroups`, {username: localStorage.getItem('username')}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        this.groups = response.groups
+        localStorage.setItem('groups', response.groups);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+
     // this.socketService.joinRoom(groups)
     this.socketService.onMessage().subscribe(
       (msg) =>{
@@ -99,5 +101,65 @@ export class Chat{
     ).subscribe();
   }
 
+  leaveGroup(){
+    this.httpService.post(`${this.server}/api/leaveGroup`, {id: localStorage.getItem('username'), currentGroup: this.currentGroup}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        this.channels = response.channels;
+        this.members = response.members;
+        localStorage.setItem('channels', response.channels);
+        localStorage.setItem('members', response.members);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+    window.location.reload();
+  }
+
+  deleteGroup(){
+    this.httpService.post(`${this.server}/api/deleteGroups`, {groupId: this.currentGroup}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        this.channels = response.channels;
+        this.members = response.members;
+        localStorage.setItem('channels', response.channels);
+        localStorage.setItem('members', response.members);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+    window.location.reload();
+  }
+
+  newChannel = '';
+  addChannel(){
+    this.httpService.post(`${this.server}/api/addChannel`, {groupId: this.currentGroup, newChannels: this.newChannel}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        console.log(response);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+  }
+
+  deleteChannel(){
+    this.httpService.post(`${this.server}/api/deleteChannel`, {groupId: this.currentGroup, channel: this.selectedChannel}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        console.log(response);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+  }
 }
 

@@ -65,10 +65,28 @@
   </button>
 </div>
 
+<label>Ban User:</label>
 <div>
   <button (click)="banUser()">{{selectedMember}}</button>
 </div>
 
+<label>Leave Group:</label>
+<div>
+  <button (click)="leaveGroup()">{{currentGroup}}</button>
+</div>
+
+<label>Delete Group:</label>
+<div>
+  <button (click)="deleteGroup()">{{currentGroup}}</button>
+</div>
+
+<input type="text" [(ngModel)]="newChannel" name="newChannel" id="newChannel" placeholder="Enter channel name"/>
+<button (click)="addChannel()">Add Channel</button>
+
+<label>Delete Group:</label>
+<div>
+  <button (click)="deleteChannel()">{{selectedChannel}}</button>
+</div>
 
 </body>
 </html>
