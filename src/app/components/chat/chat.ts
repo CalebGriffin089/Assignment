@@ -1,9 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal, OnInit, CSP_NONCE } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, connect, map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { io } from 'socket.io-client';
 import { Sockets } from '../../services/sockets';
 
 @Component({
@@ -76,7 +75,7 @@ export class Chat{
   selectGroup(msg: any) {
     this.currentGroup = msg;
     //get channels for a group
-    this.httpService.post(`${this.server}/api/getChannels`, {id: msg}).pipe(
+    this.httpService.post(`${this.server}/api/getChannels`, {id: msg, username: localStorage.getItem('username')}).pipe(
     map((response: any) => {
         // Check if response is valid
         this.channels = response.channels;
@@ -158,11 +157,75 @@ export class Chat{
         return of(null);  // Return null if there is an error
       })
     ).subscribe();
-    window.location.reload();
+
+    this.httpService.post(`${this.server}/api/createChannel`, {groupId: this.currentGroup, name: this.newChannel, members: localStorage.getItem("username")}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        console.log(response);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+
+    // window.location.reload();
   }
 
   deleteChannel(){
     this.httpService.post(`${this.server}/api/deleteChannel`, {groupId: this.currentGroup, channel: this.selectedChannel}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        console.log(response);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+  }
+  banUserChannel(){
+    this.httpService.post(`${this.server}/api/banUserChannel`, {currentGroup: this.currentGroup, id: this.selectedMember}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        console.log(response);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+  }
+
+  addUser(){
+    this.httpService.post(`${this.server}/api/joinChannel`, {username: this.selectedMember, newChannel: this.selectedChannel}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        console.log(response);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+  }
+
+  
+  removeUser(){
+    this.httpService.post(`${this.server}/api/kickUserChannel`, {id: this.selectedMember, currentChannel: this.selectedChannel}).pipe(
+    map((response: any) => {
+        // Check if response is valid
+        console.log(response);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+  }
+
+  removeUserGroups(){
+    this.httpService.post(`${this.server}/api/kickUserGroups`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
     map((response: any) => {
         // Check if response is valid
         console.log(response);

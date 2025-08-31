@@ -33,6 +33,11 @@
   app.use("/api/deleteGroups", require("./routes/deleteGroups.js"));
   app.use("/api/addChannel", require("./routes/addChannels.js"));
   app.use("/api/deleteChannel", require("./routes/deleteChannels.js"));
+  app.use("/api/createChannel", require("./routes/createChannel.js"));
+  app.use("/api/banUserChannel", require("./routes/banUserChannel.js"));
+  app.use("/api/joinChannel", require("./routes/joinChannel.js"));
+  app.use("/api/kickUserChannel", require("./routes/kickUserChannel.js"));
+  app.use("/api/kickUserGroups", require("./routes/kickUserGroups.js"));
   // API endpoint
 
 

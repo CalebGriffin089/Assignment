@@ -80,8 +80,6 @@ router.post("/", (req, res) => {
       if (!Array.isArray(group.members)) group.members = [];
       if (!group.members.includes(user.username)) group.members.push(user.username);
 
-      console.log(group.members);
-
       // save updated groups
       fs.writeFile(groupsFile, JSON.stringify(groupsData, null, 2), "utf8", (err) => {
         if (err) {

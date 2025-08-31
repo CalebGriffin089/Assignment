@@ -7,7 +7,7 @@ const router = express.Router();
 router.post("/", (req, res) => {
   const groupId = req.body.groupId;
   const channelToDelete = req.body.channel;
-
+  
   if (!channelToDelete) {
     return res.status(400).json({ error: "No channel specified" });
   }
@@ -49,9 +49,53 @@ router.post("/", (req, res) => {
       }
 
       console.log(`Deleted channel "${channelToDelete}" from group ${groupId}`);
-      res.json({ success: true, channels: group.channels });
     });
   });
+
+  if (!channelToDelete) {
+    return res.status(400).json({ error: "Channel ID is required" });
+  }
+
+  const channelsFile = path.join(__dirname, "../data/channels.txt");
+
+  // Step 1: Read the channels file
+  fs.readFile(channelsFile, "utf8", (err, data) => {
+    if (err) {
+      console.log("Error reading channels file");
+      return res.status(500).json({ error: "Internal server error (channels)" });
+    }
+
+    let fileData = [];
+    try {
+      fileData = JSON.parse(data);
+    } catch (err) {
+      console.log("Error parsing channels.txt");
+      return res.status(500).json({ error: "Corrupted channels data" });
+    }
+
+    // Step 2: Find the channel by ID
+    const channelIndex = fileData.findIndex(channel => channel.name == channelToDelete);
+
+    if (channelIndex === -1) {
+      return res.status(404).json({ error: "Channel not found" });
+    }
+
+    // Step 3: Remove the channel from the array
+    const deletedChannel = fileData.splice(channelIndex, 1)[0];
+
+    // Step 4: Write the updated file back
+    fs.writeFile(channelsFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
+      if (err) {
+        console.log("Error writing channels file");
+        return res.status(500).json({ error: "Failed to write channels file" });
+      }
+
+      console.log("Channel deleted:", deletedChannel);
+      res.json({ valid: true, message: `Channel ${deletedChannel.name} deleted successfully` });
+    });
+  });
+
+
 });
 
 module.exports = router;

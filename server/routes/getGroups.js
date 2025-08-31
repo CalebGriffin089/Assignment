@@ -24,7 +24,6 @@ router.post("/", (req, res) => {
 
 
     const user = users.find(u => u.username === username);
-    console.log(users);
     const groups = user && Array.isArray(user.groups) ? user.groups : [];
 
     res.json({ groups });

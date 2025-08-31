@@ -1,25 +1,20 @@
 [
   {
-    "id": 0,
-    "channels": [
-      "Test",
-      "Test2"
-    ],
+    "id": 1,
+    "groupId": "0",
+    "name": "Test",
     "admins": [
-      "test@com.au",
       "Hi"
     ],
     "banned": [],
     "members": [
-      "Hi",
-      "Hi3"
+      "Hi"
     ]
   },
   {
-    "id": 1,
-    "channels": [
-      "main"
-    ],
+    "id": 2,
+    "groupId": "0",
+    "name": "Test2",
     "admins": [
       "Hi"
     ],
