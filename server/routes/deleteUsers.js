@@ -5,6 +5,7 @@ const path = require("path");
 const router = express.Router();
 
 router.post("/", (req, res) => {
+  
   const usernameToDelete = req.body.username;
 
   const usersFile = path.join(__dirname, "../data/users.txt");
@@ -24,14 +25,12 @@ router.post("/", (req, res) => {
       console.log("Error parsing users.txt");
       return res.status(500).json({ error: "Corrupted user data" });
     }
-
     // Find and remove user
     const userIndex = users.findIndex(u => u.username === usernameToDelete);
     if (userIndex === -1) {
       return res.json({ success: false, message: "User not found" });
     }
     users.splice(userIndex, 1);
-
     // Step 2: Read groups.txt
     fs.readFile(groupsFile, "utf8", (err, groupData) => {
       if (err) {

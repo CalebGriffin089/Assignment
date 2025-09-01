@@ -1,16 +1,22 @@
 <nav class="navbar navbar-default">
-<div class="container-fluid">
-<ul class="nav navbar-nav">
-<li> <a class="nav-link" routerLink="/">login</a></li>
-<li><a class="nav-link" routerLink="/chat">Chat</a></li>
-<li><a class="nav-link" routerLink="/create">Create User</a></li>
-<li><a class="nav-link" routerLink="/joinGroups">join Groups</a></li>
-<li><a class="nav-link" routerLink="/createGroups">Create Groups</a></li>
-<li><a class="nav-link" routerLink="/deleteUser">Delete User</a></li>
-<li><a class="nav-link" (click)="logout()">Logout</a></li>
-</ul>
-</div>
+  <div class="container-fluid">
+    <ul class="nav navbar-nav">
+      <li><a class="nav-link" routerLink="/">Login</a></li>
+      <li><a class="nav-link" routerLink="/chat">Chat</a></li>
+      <li><a class="nav-link" routerLink="/create">Create User</a></li>
+      <li><a class="nav-link" routerLink="/joinGroups">Join Groups</a></li>
+      <li><a class="nav-link" routerLink="/createGroups">Create Groups</a></li>
+      <li><a class="nav-link" routerLink="/deleteUser">Delete User</a></li>
+
+      <!-- Only show the 'Requests' link if the user is a super admin -->
+      <li *ngIf="isSuperAdmin"><a class="nav-link" routerLink="/requests">Requests</a></li>
+
+      <!-- Only show the 'Logout' button if the user is logged in -->
+      <li><a class="nav-link" (click)="logout()">Logout</a></li>
+    </ul>
+  </div>
 </nav>
+
 <div class="container">
-<router-outlet></router-outlet>
+  <router-outlet></router-outlet>
 </div>

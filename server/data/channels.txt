@@ -6,7 +6,9 @@
     "admins": [
       "Hi"
     ],
-    "banned": [],
+    "banned": [
+      "Hi2"
+    ],
     "members": [
       "Hi"
     ]
@@ -15,6 +17,31 @@
     "id": 2,
     "groupId": "0",
     "name": "Test2",
+    "admins": [
+      "Hi"
+    ],
+    "banned": [],
+    "members": [
+      "Hi",
+      "Hi2"
+    ]
+  },
+  {
+    "id": 3,
+    "groupId": "0",
+    "name": "Test3",
+    "admins": [
+      "Hi"
+    ],
+    "banned": [],
+    "members": [
+      "Hi"
+    ]
+  },
+  {
+    "id": 6,
+    "groupId": "0",
+    "name": "ty",
     "admins": [
       "Hi"
     ],

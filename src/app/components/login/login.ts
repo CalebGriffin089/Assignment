@@ -1,9 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { io } from 'socket.io-client';
 
 @Component({
   selector: 'login',
@@ -13,22 +12,18 @@ import { io } from 'socket.io-client';
 export class Login {
   user = { username: '', password: '' };
   server = 'http://localhost:3000';  // Your server URL
-
+  errorMsg = '';
   constructor(private httpService: HttpClient, private router: Router) {}
 
-  onSubmit(): void {
-    const userData = {
-      username: this.user.username,
-      password: this.user.password
-    };
+  onLogin(): void {
 
     if (this.user.username !== '' && this.user.password !== '') {
-      // Send the login request using RxJS pipe and handle the response
-      this.httpService.post(`${this.server}/api/auth`, userData).pipe(
+
+      // Send a http login request with the user data
+      this.httpService.post(`${this.server}/api/auth`, this.user).pipe(
         map((response: any) => {
           // Check if response is valid
           if (response.valid) {
-            console.log('Login successful');
             localStorage.setItem("username", response.username);
             localStorage.setItem("id", response.id);
             localStorage.setItem("password", response.password);
@@ -36,11 +31,10 @@ export class Login {
             localStorage.setItem("roles", response.roles);
             localStorage.setItem("groups", response.groups);
             localStorage.setItem("valid", response.valid);
-            this.router.navigate(['/chat']);  // Navigate to the account page
+            this.router.navigate(['/chat']);  // go to the chat page
 
-            // Emit login success to the server (if needed)
           } else {
-            console.log('Invalid credentials');
+            this.errorMsg ='Invalid credentials';
           }
         }),
         catchError((error) => {
@@ -50,6 +44,5 @@ export class Login {
       ).subscribe();  // Subscribe to trigger the HTTP request
     }
   }
-  // Remember to disconnect the socket when the component is destroyed
 }
 

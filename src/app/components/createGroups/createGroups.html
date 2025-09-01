@@ -1,21 +1,26 @@
-<form (ngSubmit)="onSubmit()">
-  <label for="email">Base Channel</label>
-  <input
-    type="text"
-    id="email"
-    [(ngModel)]="groupData.channels"
-    name="email"
-    class="form-control"
-    required
-  />
-  <label for="password">Admin</label>
-  <input
-    type="password"
-    id="password"
-    [(ngModel)]="groupData.admins"
-    name="password"
-    class="form-control"
-    required
-  />
-  <button type="submit">Create</button>
+<!-- Form to Create a Group -->
+<form (ngSubmit)="createGroup()" class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg p-4">
+        <h4 class="text-center mb-4">Create Group</h4>
+
+        <!-- Base Channel Input -->
+        <div class="form-group mb-3">
+          <label for="channels" class="form-label">Base Channel</label>
+          <input
+            type="text"
+            id="channels"
+            [(ngModel)]="groupData.channels"
+            name="channels"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary w-100 mt-3">Create</button>
+      </div>
+    </div>
+  </div>
 </form>

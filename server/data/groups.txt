@@ -3,16 +3,16 @@
     "id": 0,
     "channels": [
       "Test",
-      "Test2"
+      "Test2",
+      "Test3"
     ],
     "admins": [
-      "test@com.au",
-      "Hi"
+      "Hi",
+      "Hi2"
     ],
     "banned": [],
     "members": [
-      "Hi",
-      "Hi3"
+      "Hi"
     ]
   },
   {
@@ -25,7 +25,7 @@
     ],
     "banned": [],
     "members": [
-      "Hi"
+      "Hi2"
     ]
   }
 ]

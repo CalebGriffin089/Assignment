@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Profile</title>
+  <!-- Bootstrap 5 CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    /* Additional custom styles to make the page look more polished */
+    .container {
+      max-width: 900px;
+    }
+    .card-header {
+      font-size: 1.25rem;
+      background-color: #f8f9fa;
+    }
+    .card-body {
+      padding: 1.5rem;
+    }
+    .btn-group button {
+      margin-right: 10px;
+    }
+  </style>
+</head>
+<body class="bg-light">
+
+  <div class="container mt-5">
+    <!-- Section: Admin Only Check -->
+    <div *ngIf="!isSuperAdmin" class="alert alert-warning text-center">
+      <h4>This is an Admin Only Page</h4>
+    </div>
+
+    <!-- Admin Content for Super Admin -->
+    <div *ngIf="isSuperAdmin">
+
+      <!-- Account Creation Requests Section -->
+      <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+          <h4>Account Creation Requests</h4>
+        </div>
+        <div class="card-body">
+          <div *ngIf="requestsUsers.length > 0">
+            <ul class="list-group">
+              <li *ngFor="let request of requestsUsers" class="list-group-item d-flex justify-content-between align-items-center mb-3 border">
+                <div>
+                  <p><strong>Username:</strong> {{ request.username }}</p>
+                  <p><strong>Email:</strong> {{ request.email }}</p>
+                  <p><strong>Status:</strong> {{ request.status }}</p>
+                  <p><strong>Need:</strong> Account Creation</p>
+                </div>
+                <div class="btn-group">
+                  <button (click)="accept(request.username, request.email, request.password)" class="btn btn-success">Accept</button>
+                  <button (click)="decline(request.username, 'account')" class="btn btn-danger">Decline</button>
+                </div>
+              </li>
+            </ul>
+          </div>
+          <!-- Message if no requests available -->
+          <div *ngIf="requestsUsers.length === 0">
+            <p class="text-muted">No Account Creation requests available.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Space between sections -->
+      <br>
+
+      <!-- Super Admin Promotion Form -->
+      <div class="card">
+        <div class="card-header bg-warning text-dark">
+          <h5>Promote User to Super Admin</h5>
+        </div>
+        <div class="card-body">
+          <form (ngSubmit)="onSubmitSuper()">
+            <div class="mb-3">
+              <label for="userInput" class="form-label">Username to promote:</label>
+              <input id="userInput" [(ngModel)]="userInput" name="userInput" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary w-100" [disabled]="!userInput">Submit</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bootstrap 5 JS CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,21 +1,43 @@
-<form (ngSubmit)="onSubmit()">
-  <label for="email">username</label>
-  <input
-    type="text"
-    id="email"
-    [(ngModel)]="user.username"
-    name="email"
-    class="form-control"
-    required
-  />
+<!-- Login Form -->
+<form (ngSubmit)="onLogin()" class="container mt-4">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card shadow-lg p-4">
+        <h4 class="text-center mb-4">Login</h4>
 
-  <input
-    type="password"
-    id="password"
-    [(ngModel)]="user.password"
-    name="password"
-    class="form-control"
-    required
-  />
-  <button type="submit">Login</button>
+        <!-- Username Input -->
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input
+            type="text"
+            id="username"
+            [(ngModel)]="user.username"
+            name="username"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <!-- Password Input -->
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input
+            type="password"
+            id="password"
+            [(ngModel)]="user.password"
+            name="password"
+            class="form-control"
+            required
+          />
+        </div>
+
+        <div *ngIf="errorMsg" class="error-message">
+          {{ errorMsg }}
+        </div>
+
+        <!-- Submit Button -->
+        <button type="submit" class="btn btn-primary w-100 mt-3">Login</button>
+      </div>
+    </div>
+  </div>
 </form>

@@ -39,10 +39,10 @@
       <div *ngIf="groups.length > 0" class="mb-4">
         <label class="fw-bold mb-2">Groups:</label>
         <div class="d-flex flex-wrap gap-2">
-          <button *ngFor="let msg of groups; let i = index" 
+          <button *ngFor="let group of groups; let i = index" 
                   class="btn btn-outline-primary" 
-                  (click)="selectGroup(msg)">
-            {{ msg }}
+                  (click)="selectGroup(group)">
+            {{ group }}
           </button>
         </div>
       </div>
@@ -64,10 +64,10 @@
       <div *ngIf="members.length > 0" class="mb-4">
         <label class="fw-bold mb-2">Members:</label>
         <div class="d-flex flex-wrap gap-2">
-          <button *ngFor="let msg of members; let i = index" 
+          <button *ngFor="let member of members; let i = index" 
                   class="btn btn-outline-dark" 
-                  (click)="selectMember(msg)">
-            {{ msg }}
+                  (click)="selectMember(member)">
+            {{ member }}
           </button>
         </div>
       </div>
@@ -80,49 +80,89 @@
 
       <!-- Admin actions -->
       <div *ngIf="isAdmin" class="border-top pt-4 mt-4">
+        <h4 class="fw-bold mb-3">Admin Actions</h4>
+
+        <!-- Ban User -->
         <div class="mb-3">
           <label class="fw-bold mb-2">Ban User From Group:</label><br>
           <button class="btn btn-danger" (click)="banUser()">{{selectedMember}}</button>
         </div>
 
+        <!-- Delete Group -->
         <div class="mb-3">
           <label class="fw-bold mb-2">Delete Group:</label><br>
           <button class="btn btn-danger" (click)="deleteGroup()">{{currentGroup}}</button>
         </div>
 
+        <!-- Add Channel -->
         <div class="input-group mb-3">
-          <input type="text" [(ngModel)]="newChannel" 
-                 name="newChannel" id="newChannel" 
-                 class="form-control" 
-                 placeholder="Enter channel name">
-          <button class="btn btn-success" (click)="addChannel()">Add Channel</button>
+          <input type="text"
+                #newChannel
+                name="newChannel" id="newChannel" 
+                class="form-control" 
+                placeholder="Enter channel name">
+          <button class="btn btn-success" (click)="addChannel(newChannel.value)">Add Channel</button>
         </div>
 
+        <!-- Delete Channel -->
         <div class="mb-3">
           <label class="fw-bold mb-2">Delete Channel:</label><br>
           <button class="btn btn-danger" (click)="deleteChannel()">{{selectedChannel}}</button>
         </div>
 
-         <div class="mb-3">
+        <!-- Ban User from Channel -->
+        <div class="mb-3">
           <label class="fw-bold mb-2">Ban User From Current Channel:</label><br>
           <button class="btn btn-danger" (click)="banUserChannel()">{{selectedMember}}</button>
         </div>
 
+        <!-- Add User to Channel -->
         <div class="mb-3">
           <label class="fw-bold mb-2">Add User To Current Channel:</label><br>
-          <button class="btn btn-danger" (click)="addUser()">{{selectedMember}}</button>
+          <button class="btn btn-success" (click)="addUser()">{{selectedMember}}</button>
         </div>
 
+        <!-- Remove User from Channel -->
         <div class="mb-3">
           <label class="fw-bold mb-2">Remove User From Current Channel:</label><br>
-          <button class="btn btn-danger" (click)="removeUser()">{{selectedMember}}</button>
+          <button class="btn btn-warning" (click)="removeUser()">{{selectedMember}}</button>
         </div>
 
+        <!-- Remove User from Group -->
         <div class="mb-3">
           <label class="fw-bold mb-2">Remove User From Current Group:</label><br>
           <button class="btn btn-danger" (click)="removeUserGroups()">{{selectedMember}}</button>
         </div>
 
+        <!-- Promote User -->
+        <div class="mb-3">
+          <label class="fw-bold mb-2">Promote User To Admin:</label><br>
+          <button class="btn btn-success" (click)="promoteUser()">{{selectedMember}}</button>
+        </div>
+        
+        <!-- Group Join Requests -->
+        <div>
+          <label class="fw-bold mb-2">Group Join Requests:</label>
+          <div *ngIf="requestsGroups.length > 0">
+            <ul class="list-group">
+              <li *ngFor="let request of requestsGroups" class="list-group-item">
+                <p><strong>Username:</strong> {{ request.username }}</p>
+                <p><strong>Group:</strong> {{ request.groupId }}</p>
+                <p><strong>Status:</strong> {{ request.status }}</p>
+                <p><strong>Permission:</strong> {{ request.permission }}</p>
+                <p><strong>Need:</strong> {{ request.need }} </p>
+                <button class="btn btn-success" (click)="acceptGroup(request.username, request.groupId)">Accept</button>
+                <button class="btn btn-danger" (click)="decline(request.username, 'group')">Decline</button>
+                <hr>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Display a message if no requests are found -->
+          <div *ngIf="requestsGroups.length === 0">
+            <p>No Group Join requests available.</p>
+          </div>
+        </div>
       </div>
     </div>
   </div>

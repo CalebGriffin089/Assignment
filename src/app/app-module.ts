@@ -11,6 +11,7 @@ import { Create } from './components/create/create';
 import { JoinGroups } from './components/joinGroups/joinGroups';
 import { CreateGroup } from './components/createGroups/createGroups';
 import { DeleteUser } from './components/deleteUser/deleteUser';
+import { Requests } from './components/requests/requests';
 @NgModule({
   declarations: [
     App,
@@ -19,7 +20,8 @@ import { DeleteUser } from './components/deleteUser/deleteUser';
     Create,
     JoinGroups, 
     CreateGroup,
-    DeleteUser
+    DeleteUser,
+    Requests
   ],
   imports: [
     BrowserModule,

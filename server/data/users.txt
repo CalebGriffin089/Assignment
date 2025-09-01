@@ -4,20 +4,13 @@
     "username": "Hi2",
     "email": "df",
     "password": "123",
-    "groups": [],
+    "groups": [
+      "1"
+    ],
     "roles": [
       "user"
-    ]
-  },
-  {
-    "id": 2,
-    "username": "Test",
-    "email": "2",
-    "password": "123",
-    "groups": [],
-    "roles": [
-      "user"
-    ]
+    ],
+    "role": "admin"
   },
   {
     "id": 3,
@@ -25,21 +18,14 @@
     "email": "12",
     "password": "12",
     "groups": [
-      "0"
+      "0",
+      "1",
+      "1"
     ],
     "roles": [
       "admin",
-      "user"
+      "user",
+      "superAdmin"
     ]
-  },
-  {
-    "id": 4,
-    "username": "Hi3",
-    "email": "s",
-    "password": "12",
-    "groups": [
-      "0"
-    ],
-    "roles": []
   }
 ]

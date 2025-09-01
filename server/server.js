@@ -25,7 +25,7 @@
   app.use("/api/getGroups", require("./routes/getGroups.js"));
   app.use("/api/getChannels", require("./routes/getChannels.js"));
   app.use("/api/delete", require("./routes/deleteUsers.js"));
-  app.use("/api/create", require("./routes/createUser.js"));
+  app.use("/api/create", require("./routes/createUserRequest.js"));
   app.use("/api/createGroup", require("./routes/createGroup.js"));
   app.use("/api/ban", require("./routes/banUser.js"));
   app.use("/api/auth", require("./routes/auth.js"));
@@ -38,7 +38,17 @@
   app.use("/api/joinChannel", require("./routes/joinChannel.js"));
   app.use("/api/kickUserChannel", require("./routes/kickUserChannel.js"));
   app.use("/api/kickUserGroups", require("./routes/kickUserGroups.js"));
+  app.use("/api/getRequests", require("./routes/getUserRequests.js"));
+  app.use("/api/acceptUser", require("./routes/acceptUser.js"));
+  app.use("/api/createGroupRequest", require("./routes/createGroupRequest.js"));
+  app.use("/api/getGroupRequests", require("./routes/getGroupRequests.js"));
+  app.use("/api/acceptGroup", require("./routes/acceptGroup.js"));
+  app.use("/api/decline", require("./routes/decline.js"));
+  app.use("/api/promoteUser", require("./routes/promoteUser.js"));
+  app.use("/api/getAdmin", require("./routes/getAdmin.js"));
+  app.use("/api/promoteSuperAdmin", require("./routes/promoteSuperAdmin.js"));
   // API endpoint
+  
 
 
 

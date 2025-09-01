@@ -1,10 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError, map } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { io } from 'socket.io-client';
-import { Sockets } from '../../services/sockets';
 
 @Component({
   selector: 'joinGroups',
@@ -15,59 +13,29 @@ import { Sockets } from '../../services/sockets';
 export class JoinGroups{
   server = 'http://localhost:3000';
   constructor(private router: Router, private httpService: HttpClient) {}
-  messageOut = signal("");
-  messageIn = signal<string[]>([]);
   groupName = '';
+
   ngOnInit(){
     if(!localStorage.getItem("valid")){
       this.router.navigate(['/']);
     }
   }
-
+ 
  onSubmit() {
-  let groups = [];
-
-  // Get the 'groups' from localStorage
-  let storedGroups = localStorage.getItem("groups");
-
-  // If 'groups' exists in localStorage and is not null or 'undefined'
-  if (storedGroups && storedGroups !== "undefined") {
-    try {
-      // Parse stored groups, ensuring it's an array or fallback to an empty array
-      groups = JSON.parse(storedGroups);
-    } catch (error) {
-      console.error("Error parsing groups from localStorage", error);
-      groups = [];  // Fallback to an empty array if the parsing fails
-    }
-  }
-
-  // Add this.user to the groups array (make sure this.user is an object, not an array)
-  groups.push(this.groupName);
-  // Store the updated array back in localStorage
-  localStorage.setItem('groups', JSON.stringify(groups));
   let userData = {
     id: localStorage.getItem('id'),
-    groups: groups,
     username: localStorage.getItem('username'),
-    newGroup: this.groupName
+    groupId: this.groupName
   }
-  this.httpService.post(`${this.server}/api/join`, userData).pipe(
-    map((response: any) => {
-      // Check if response is valid
-      if (response.valid) {
-        console.log('Login successful');
-        console.log(response);
 
-        // Emit login success to the server (if needed)
-      } else {
-        console.log('Invalid credentials');
-      }
-    }),
+  this.httpService.post(`${this.server}/api/createGroupRequest`, userData).pipe(
     catchError((error) => {
       console.error('Error during login:', error);
       return of(null);  // Return null if there is an error
     })
-  ).subscribe();
+  ).subscribe(() =>{
+    this.groupName = ''; // reset the text box once the request has been saved
+  });  // Subscribe to trigger the HTTP request
 
 }
 }

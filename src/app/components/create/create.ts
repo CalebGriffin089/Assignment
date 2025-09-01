@@ -10,12 +10,12 @@ import { of } from 'rxjs';
   standalone: false,
 })
 export class Create {
+  server = 'http://localhost:3000'; 
   user = { 
           username: '',
           email: '', 
           password: '',
         };
-  server = 'http://localhost:3000';  // Your server URL
   response = '';
   constructor(private httpService: HttpClient, private router: Router) {}
 
@@ -26,8 +26,8 @@ export class Create {
       this.httpService.post(`${this.server}/api/create`, this.user).pipe(
         map((response: any) => {
           // Check if response is valid
-          if (!response.valid) {
-            this.router.navigate(['/']);  // Navigate to the account page
+          if (response.valid) {
+            this.router.navigate(['/']);  // Navigate to the login page
 
           } else {
            this.response = "Username Has already been taken";
