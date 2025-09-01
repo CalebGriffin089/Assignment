@@ -30,20 +30,16 @@ router.post("/", (req, res) => {
       return res.status(500).json({ error: "Corrupted users data" });
     }
 
-    // update user groups
+    // find user
     const userObj = fileData.find(u => parseInt(u.id) === parseInt(user.id));
     if (!userObj) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // ensure groups array
-    if (!Array.isArray(userObj.groups)) userObj.groups = [];
 
     if (!userObj.groups.includes(user.newGroup.toString())) {
       userObj.groups.push(user.newGroup.toString());
     }
-
-    console.log("Updated Channels:", userObj.groups);
 
     // read groups.txt
     fs.readFile(groupsFile, "utf8", (err, data2) => {
@@ -65,20 +61,18 @@ router.post("/", (req, res) => {
         return res.status(404).json({ success: false, message: "Group not found" });
       }
 
-      // ensure banned array
-      if (!Array.isArray(group.banned)) group.banned = [];
-
+      //check if the user is banned
       if (group.banned.includes(user.username)) {
-        console.log(`User ${user.username} is banned from group ${user.newGroup}`);
         return res.status(403).json({
           success: false,
-          message: `User ${user.username} is banned from this group`
+          message: "User" + user.username + "is banned from this group"
         });
       }
 
       // add user if not already a member
-      if (!Array.isArray(group.members)) group.members = [];
-      if (!group.members.includes(user.username)) group.members.push(user.username);
+      if (!group.members.includes(user.username)){
+        group.members.push(user.username);
+      } 
 
       // save updated groups
       fs.writeFile(groupsFile, JSON.stringify(groupsData, null, 2), "utf8", (err) => {

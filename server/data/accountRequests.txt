@@ -1,7 +1,2 @@
 [
-  {
-    "username": "Hif",
-    "email": "df",
-    "password": "12"
-  }
 ]

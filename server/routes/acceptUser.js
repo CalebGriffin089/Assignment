@@ -4,7 +4,6 @@ const path = require("path");
 
 const router = express.Router();
 
-// Path to the users and requests files
 const usersFile = path.join(__dirname, "../data/users.txt");
 const requestsFile = path.join(__dirname, "../data/accountRequests.txt");
 
@@ -18,7 +17,6 @@ router.post("/", (req, res) => {
     roles: ["user"]
   };
 
-  // Read the users file to check if the username already exists
   fs.readFile(usersFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading users file");
@@ -41,9 +39,9 @@ router.post("/", (req, res) => {
       user.id = lastId + 1;
     }
 
-    // Add new user to the users file
     fileData.push(user);
-    // Write the updated users file
+
+    // update users file
     fs.writeFile(usersFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing users file");
@@ -52,7 +50,7 @@ router.post("/", (req, res) => {
 
       console.log("User registered:", user.username);
 
-      // After adding the user, remove them from the requests file
+      // After adding the user remove them from the requests file
       fs.readFile(requestsFile, "utf8", (err, requestsData) => {
         if (err) {
           console.log("Error reading requests file");
@@ -78,14 +76,12 @@ router.post("/", (req, res) => {
         // Remove the user request
         requests.splice(requestIndex, 1);
 
-        // Write the updated requests file
+        // update the request file
         fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing to requests.txt");
             return res.status(500).json({ error: "Failed to update requests file" });
           }
-
-          // Respond with success message
           console.log("User removed from requests list:", user.username);
           res.json({ valid: true, userId: user.id });
         });

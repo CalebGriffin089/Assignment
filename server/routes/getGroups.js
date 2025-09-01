@@ -2,7 +2,7 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 
-const router = express.Router(); // <-- use router, not app
+const router = express.Router();
 
 router.post("/", (req, res) => {
   const username = req.body.username;
@@ -24,10 +24,20 @@ router.post("/", (req, res) => {
 
 
     const user = users.find(u => u.username === username);
-    const groups = user && Array.isArray(user.groups) ? user.groups : [];
+    let groups; 
 
-    res.json({ groups });
+    // First, check if the user exists
+    if (user) {
+        // if the user exists get its groups array
+        groups = user.groups;
+    } else {
+      // If user is null or undefined
+      groups = [];
+    }
+
+    console.log(groups);
+    res.json({ groups: groups });
   });
 });
 
-module.exports = router; // <-- export router
+module.exports = router;

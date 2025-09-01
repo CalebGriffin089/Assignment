@@ -1,13 +1,13 @@
 [
   {
     "id": 1,
-    "groupId": "0",
-    "name": "Test",
+    "groupId": "1",
+    "name": "sdf",
     "admins": [
       "Hi"
     ],
     "banned": [
-      "Hi2"
+      "Hi"
     ],
     "members": [
       "Hi"
@@ -15,33 +15,8 @@
   },
   {
     "id": 2,
-    "groupId": "0",
-    "name": "Test2",
-    "admins": [
-      "Hi"
-    ],
-    "banned": [],
-    "members": [
-      "Hi",
-      "Hi2"
-    ]
-  },
-  {
-    "id": 3,
-    "groupId": "0",
-    "name": "Test3",
-    "admins": [
-      "Hi"
-    ],
-    "banned": [],
-    "members": [
-      "Hi"
-    ]
-  },
-  {
-    "id": 6,
-    "groupId": "0",
-    "name": "ty",
+    "groupId": 0,
+    "name": "3",
     "admins": [
       "Hi"
     ],

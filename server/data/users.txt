@@ -4,13 +4,10 @@
     "username": "Hi2",
     "email": "df",
     "password": "123",
-    "groups": [
-      "1"
-    ],
+    "groups": [],
     "roles": [
       "user"
-    ],
-    "role": "admin"
+    ]
   },
   {
     "id": 3,
@@ -18,8 +15,6 @@
     "email": "12",
     "password": "12",
     "groups": [
-      "0",
-      "1",
       "1"
     ],
     "roles": [

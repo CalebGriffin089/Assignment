@@ -14,6 +14,7 @@ router.post("/", (req, res) => {
 
   const groupsFile = path.join(__dirname, "../data/groups.txt");
 
+  //read group file
   fs.readFile(groupsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading groups file");
@@ -33,15 +34,10 @@ router.post("/", (req, res) => {
       return res.status(404).json({ error: "Group not found" });
     }
 
-    // Ensure channels is an array
-    if (!Array.isArray(group.channels)) {
-      group.channels = [];
-    }
-
     // Remove the channel
-    group.channels = group.channels.filter(ch => ch !== channelToDelete);
+    group.channels = group.channels.filter(ch => String(ch) !== String(channelToDelete));
 
-    // Save updated groups file
+    // update groups file
     fs.writeFile(groupsFile, JSON.stringify(groupsData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing groups file");
@@ -58,7 +54,7 @@ router.post("/", (req, res) => {
 
   const channelsFile = path.join(__dirname, "../data/channels.txt");
 
-  // Step 1: Read the channels file
+  // read the channels file
   fs.readFile(channelsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading channels file");
@@ -73,17 +69,16 @@ router.post("/", (req, res) => {
       return res.status(500).json({ error: "Corrupted channels data" });
     }
 
-    // Step 2: Find the channel by ID
     const channelIndex = fileData.findIndex(channel => channel.name == channelToDelete);
 
     if (channelIndex === -1) {
       return res.status(404).json({ error: "Channel not found" });
     }
 
-    // Step 3: Remove the channel from the array
+    // remove the channel from the array
     const deletedChannel = fileData.splice(channelIndex, 1)[0];
 
-    // Step 4: Write the updated file back
+    // update the channels file
     fs.writeFile(channelsFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing channels file");

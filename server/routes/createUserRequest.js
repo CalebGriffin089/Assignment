@@ -17,6 +17,7 @@ router.post("/", (req, res) => {
   const usersFile = path.join(__dirname, "../data/users.txt");
   const requestsFile = path.join(__dirname, "../data/accountRequests.txt"); // Path to requests.txt
 
+  //read user file
   fs.readFile(usersFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading users file");
@@ -74,14 +75,13 @@ router.post("/", (req, res) => {
 
       // Add the new request to the requests array
       requests.push(request);
-      // Write the updated requests data back to requests.txt
+      // update requests.txt
       fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing to requests.txt");
           return res.status(500).json({ error: "Failed to update requests file" });
         }
 
-        // Respond with the request status
         console.log("Registration request submitted:", user.username);
         res.json({ valid: true, message: "Registration request submitted successfully" });
       });

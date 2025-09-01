@@ -4,19 +4,21 @@ const path = require("path");
 
 const router = express.Router();
 
-// Define the paths to the users and requests files
+
 const usersFile = path.join(__dirname, "../data/users.txt");
 const requestsFile = path.join(__dirname, "../data/groupRequests.txt");
 
 router.post("/", (req, res) => {
+  console.log
   const user = {
     username: req.body.username,
-    groupId: req.body.groupId,  // New: the group they want to join
-    status: "pending",          // Default status is "pending" until admin approval
-    permission: "user",        // Default permission for users who request to join a group
+    groupId: req.body.groupId,  
+    status: "pending",          
+    permission: "user",        
     need: "Join Permission"
   };
 
+  //read users file
   fs.readFile(usersFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading users file");
@@ -31,7 +33,7 @@ router.post("/", (req, res) => {
       return res.status(500).json({ error: "Corrupted users data" });
     }
 
-    // Read the requests file to check if the user has already made a join request for the group
+    // Read the requests file
     fs.readFile(requestsFile, "utf8", (err, requestsData) => {
       if (err) {
         console.log("Error reading requests file");
@@ -49,13 +51,12 @@ router.post("/", (req, res) => {
       // Check if there's already a pending request for this user to join the group
       const existingRequest = requests.find(r => r.username === user.username && r.groupId === user.groupId);
       if (existingRequest) {
-        return res.json({ valid: "request already pending" });
+        return res.json({ valid: false });
       }
 
-      // Add the join group request to the requests file
       requests.push(user);
 
-      // Write the updated requests file
+      // updated the requests file
       fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing to requests.txt");
@@ -64,7 +65,7 @@ router.post("/", (req, res) => {
 
         // Respond with the request status
         console.log("Join group request submitted:", user.username, "for group:", user.groupId);
-        res.json({ valid: true, message: "Join group request submitted successfully" });
+        res.json({ valid: true });
       });
     });
   });

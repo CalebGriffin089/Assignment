@@ -13,17 +13,17 @@ router.post("/", (req, res) => {
   }
   const channelData = {
     id: 0,
-    groupId: groupId,  // Link the channel to a specific group
-    name: name,        // Name of the channel
-    admins: Array.isArray(members) ? members : [members],  // Admins are part of members
+    groupId: groupId,  
+    name: name,        
+    admins: [members],  
     banned: [],
-    members: Array.isArray(members) ? members : [members], // All members in the channel
+    members:  [members]
   };
 
   const channelsFile = path.join(__dirname, "../data/channels.txt");
   const groupsFile = path.join(__dirname, "../data/groups.txt");
 
-  // Step 1: Check if the group exists
+  //read the groups file
   fs.readFile(groupsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading groups file");
@@ -38,7 +38,7 @@ router.post("/", (req, res) => {
       return res.status(500).json({ error: "Corrupted groups data" });
     }
 
-    // Step 2: Verify that the given groupId exists
+    // check the group exists
     let groupExists = false;
     for(let i =0; i<groupsData.length;i++){
       if(groupsData[i].id == groupId){
@@ -46,12 +46,12 @@ router.post("/", (req, res) => {
         break;
       }
     }
+
     if (!groupExists) {
-      console.log("HEELLO");
       return res.status(404).json({ error: "Group not found" });
     }
 
-    // Step 3: If group exists, proceed with channel creation
+    // If group exists create the channel
     fs.readFile(channelsFile, "utf8", (err, data) => {
       
       if (err) {
@@ -76,7 +76,7 @@ router.post("/", (req, res) => {
 
       fileData.push(channelData);
 
-      // Step 4: Save the new channel to the channels file
+      // update the channel file with the new channel
       fs.writeFile(channelsFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing channels file");

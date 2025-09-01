@@ -11,7 +11,7 @@ router.post("/", (req, res) => {
   const usersFile = path.join(__dirname, "../data/users.txt");
   const groupsFile = path.join(__dirname, "../data/groups.txt");
 
-  // Step 1: Read users.txt
+  // Read users.txt
   fs.readFile(usersFile, "utf8", (err, userData) => {
     if (err) {
       console.log("Error reading users.txt");
@@ -31,7 +31,8 @@ router.post("/", (req, res) => {
       return res.json({ success: false, message: "User not found" });
     }
     users.splice(userIndex, 1);
-    // Step 2: Read groups.txt
+
+    // Read groups.txt
     fs.readFile(groupsFile, "utf8", (err, groupData) => {
       if (err) {
         console.log("Error reading groups.txt");
@@ -48,20 +49,18 @@ router.post("/", (req, res) => {
 
       // Remove user from any group they are in
       groups = groups.map(group => {
-        if (Array.isArray(group.members)) {
           group.members = group.members.filter(member => member !== usernameToDelete);
-        }
         return group;
       });
 
-      // Step 3: Write updated users.txt
+      // update users.txt
       fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing users.txt");
           return res.status(500).json({ error: "Failed to update users.txt" });
         }
 
-        // Step 4: Write updated groups.txt
+        // update groups.txt
         fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing groups.txt");

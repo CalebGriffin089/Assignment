@@ -22,6 +22,7 @@ router.post("/", (req, res) => {
       return res.status(500).json({ error: "Corrupted users data" });
     }
 
+    //check the username and password are right
     const user = users.find(u => u.username === username && u.password === password);
 
     if (user) {

@@ -5,14 +5,14 @@ const path = require("path");
 const router = express.Router();
 
 router.post("/", (req, res) => {
-  const { id, currentGroup } = req.body; // Extract user id and group id
+  const { id, currentGroup } = req.body;
 
   console.log("Remove user request - id:", id, "group:", currentGroup);
 
-  const groupsFile = path.join(__dirname, "../data/groups.txt"); // Path to groups.txt
-  const usersFile = path.join(__dirname, "../data/users.txt"); // Path to users.txt
+  const groupsFile = path.join(__dirname, "../data/groups.txt");
+  const usersFile = path.join(__dirname, "../data/users.txt"); 
 
-  // Step 1: Read groups.txt (to get group details)
+  // Read groups.txt
   fs.readFile(groupsFile, "utf8", (err, groupData) => {
     if (err) {
       console.log("Error reading groups.txt");
@@ -27,15 +27,13 @@ router.post("/", (req, res) => {
       return res.status(500).json({ error: "Corrupted group data" });
     }
 
-    // Step 2: Find the group corresponding to the groupId
-    const group = groups.find(g => parseInt(g.id) === parseInt(currentGroup));
+    // Find the group 
+    const group = groups.find(g => parseInt(g.id) == parseInt(currentGroup));
     if (!group) {
       return res.status(404).json({ success: false, message: "Group not found" });
     }
 
-    // Step 3: Remove the user from the members list in the group
-    if (!Array.isArray(group.members)) group.members = [];
-
+    //find the user in the members array
     const userIndex = group.members.indexOf(id);
     if (userIndex === -1) {
       return res.status(404).json({ success: false, message: "User is not a member of the group" });
@@ -44,7 +42,7 @@ router.post("/", (req, res) => {
     // Remove the user from the members list
     group.members.splice(userIndex, 1);
 
-    // Step 4: Update users.txt to remove the group from the user's groups array
+    // Update users.txt to remove the group from the user's groups array
     fs.readFile(usersFile, "utf8", (err, userData) => {
       if (err) {
         console.log("Error reading users.txt");
@@ -61,24 +59,28 @@ router.post("/", (req, res) => {
 
       // Find the user by id and remove the currentGroup id from their groups array
       const user = users.find(u => u.username === id);
+      if(user.roles.includes('superAdmin')){
+        console.log("Super Admin cannot be kicked")
+        return res.json({error: "cannot remove a super admin"});  
+      }
       if (user) {
         const groupIndex = user.groups.indexOf(currentGroup.toString());
         if (groupIndex !== -1) {
-          user.groups.splice(groupIndex, 1); // Remove the group ID from the user's groups array
+          user.groups.splice(groupIndex, 1);
         }
       } else {
         console.log("User not found in users file");
         return res.status(404).json({ success: false, message: "User not found in users file" });
       }
 
-      // Step 5: Write the updated users.txt
+      // update users.txt
       fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing to users.txt");
           return res.status(500).json({ error: "Failed to update users" });
         }
 
-        // Step 6: Save updated groups.txt without the removed user
+        //update groups.txt
         fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing groups.txt");

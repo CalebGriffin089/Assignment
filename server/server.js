@@ -40,7 +40,7 @@
   app.use("/api/kickUserGroups", require("./routes/kickUserGroups.js"));
   app.use("/api/getRequests", require("./routes/getUserRequests.js"));
   app.use("/api/acceptUser", require("./routes/acceptUser.js"));
-  app.use("/api/createGroupRequest", require("./routes/createGroupRequest.js"));
+  app.use("/api/createGroupJoinRequest", require("./routes/createGroupJoinRequest.js"));
   app.use("/api/getGroupRequests", require("./routes/getGroupRequests.js"));
   app.use("/api/acceptGroup", require("./routes/acceptGroup.js"));
   app.use("/api/decline", require("./routes/decline.js"));

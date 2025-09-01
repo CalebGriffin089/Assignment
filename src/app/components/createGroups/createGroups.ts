@@ -18,7 +18,7 @@ export class CreateGroup {
           banned: null,
           members: [localStorage.getItem("username")]
         };
-  
+  isAdmin = false;
 
   constructor(private httpService: HttpClient, private router: Router) {}
 
@@ -26,6 +26,15 @@ export class CreateGroup {
     if(!localStorage.getItem("valid")){
       this.router.navigate(['/']);
     }
+
+    let roles = localStorage.getItem('roles') || ""; // fallback to empty string
+    let rolesArray = roles.split(","); // splits into ["admin", "user", "superAdmin"]
+
+    // Example check if admin exists
+    if (rolesArray.includes("admin")) {
+      this.isAdmin = true;
+    }
+
   }
 
   createGroup(): void {

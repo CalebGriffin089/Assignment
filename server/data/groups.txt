@@ -1,31 +1,15 @@
 [
   {
-    "id": 0,
-    "channels": [
-      "Test",
-      "Test2",
-      "Test3"
-    ],
-    "admins": [
-      "Hi",
-      "Hi2"
-    ],
-    "banned": [],
-    "members": [
-      "Hi"
-    ]
-  },
-  {
     "id": 1,
     "channels": [
-      "main"
+      "3"
     ],
     "admins": [
       "Hi"
     ],
     "banned": [],
     "members": [
-      "Hi2"
+      "Hi"
     ]
   }
 ]

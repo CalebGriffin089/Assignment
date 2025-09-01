@@ -4,50 +4,128 @@ const path = require("path");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const groupData = {
     id: 0,
-    channels: Array.isArray(req.body.channels) ? req.body.channels : [req.body.channels],
-    admins: Array.isArray(req.body.members) ? req.body.members : [req.body.members],
+    channels: [req.body.channels],
+    admins: req.body.members, //user that created the group is by defualt and admin
     banned: [],
-    members: Array.isArray(req.body.members) ? req.body.members : [req.body.members]
+    members: req.body.members //the only member should be the creator
   };
 
   const groupsFile = path.join(__dirname, "../data/groups.txt");
+  const usersFile = path.join(__dirname, "../data/users.txt");
+  const channelsFile = path.join(__dirname, "../data/channels.txt");
 
-  fs.readFile(groupsFile, "utf8", (err, data) => {
+  //read the group file and wait untill everything in the function finishes
+  await fs.readFile(groupsFile, "utf8", (err, gData) => {
     if (err) {
       console.log("Error reading groups file");
       return res.status(500).json({ error: "Internal server error (groups)" });
     }
 
-    let fileData = [];
+    let groupFileData = [];
     try {
-      fileData = JSON.parse(data);
+      groupFileData = JSON.parse(gData);
     } catch (err) {
       console.log("Error parsing groups.txt");
       return res.status(500).json({ error: "Corrupted groups data" });
     }
 
-    if (fileData.length === 0) {
+    //get new groupId
+    if (groupFileData.length === 0) {
       groupData.id = 1;
     } else {
-      const lastId = parseInt(fileData[fileData.length - 1].id) || 0;
+      const lastId = parseInt(groupFileData[groupFileData.length - 1].id);
       groupData.id = lastId + 1;
     }
 
-    fileData.push(groupData);
+    groupFileData.push(groupData);
 
-    fs.writeFile(groupsFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
+    //update the group file
+    fs.writeFile(groupsFile, JSON.stringify(groupFileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing groups file");
         return res.status(500).json({ error: "Failed to write groups file" });
       }
 
       console.log("Group registered:", groupData);
+    });
+  });
+
+  //read the users file and wait for everything in the function to finish
+  await fs.readFile(usersFile, "utf8", (err, uData) => {
+    if (err) {
+      console.log("Error reading users file");
+      return res.status(500).json({ error: "Internal server error (users)" });
+    }
+
+    let userFileData = [];
+    try {
+      userFileData = JSON.parse(uData);
+    } catch (err) {
+      console.log("Error parsing users.txt");
+      return res.status(500).json({ error: "Corrupted users data" });
+    }
+
+    // the only member should be the creator of the group so we only need to update their user profile
+    const userObj = userFileData.find(u => u.username === groupData.members[0]);
+    if (!userObj) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+    userObj.groups.push(groupData.id.toString());
+    // save updated users
+    fs.writeFile(usersFile, JSON.stringify(userFileData, null, 2), "utf8", (err) => {
+      if (err) {
+        console.log("Error writing users file");
+        return res.status(500).json({ error: "Failed to update users" });
+      }
+    });
+  });
+
+
+  const channelData = {
+    id: 0,
+    groupId: groupData.id,  
+    name: groupData.channels[0],        
+    admins: groupData.admins,  
+    banned: [],
+    members: groupData.members 
+  };
+
+  //read teh channels file
+  fs.readFile(channelsFile, "utf8", (err, data) => {
+    
+    if (err) {
+      console.log("Error reading channels file");
+      return res.status(500).json({ error: "Internal server error (channels)" });
+    }
+
+    let fileData = [];
+    try {
+      fileData = JSON.parse(data);
+    } catch (err) {
+      console.log("Error parsing channels.txt");
+      return res.status(500).json({ error: "Corrupted channels data" });
+    }
+
+    if (fileData.length === 0) {
+      channelData.id = 1;
+    } else {
+      const lastId = parseInt(fileData[fileData.length - 1].id) || 0;
+      channelData.id = lastId + 1;
+    }
+
+    fileData.push(channelData);
+
+    // update the channels file
+    fs.writeFile(channelsFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
+      if (err) {
+        console.log("Error writing channels file");
+        return res.status(500).json({ error: "Failed to write channels file" });
+      }
       res.json({ valid: true, groupId: groupData.id });
     });
   });
 });
-
 module.exports = router;

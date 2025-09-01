@@ -27,20 +27,18 @@ router.post("/", (req, res) => {
       return res.status(500).json({ error: "Corrupted group data" });
     }
 
-    const group = groups.find(g => parseInt(g.id) === parseInt(currentGroup));
+    // find the group
+    const group = groups.find(g => parseInt(g.id) == parseInt(currentGroup));
     if (!group) {
       return res.status(404).json({ success: false, message: "Group not found" });
     }
-
-    if (!Array.isArray(group.members)) group.members = [];
-    if (!Array.isArray(group.banned)) group.banned = [];
 
     const memberIndex = group.members.indexOf(id);
     if (memberIndex !== -1) {
       group.members.splice(memberIndex, 1);
     }
 
-    // Save updated groups.txt
+    // update groups.txt
     fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing groups.txt");
@@ -70,7 +68,7 @@ router.post("/", (req, res) => {
           }
         }
 
-        // Save updated users.txt
+        // update users.txt
         fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing users.txt");

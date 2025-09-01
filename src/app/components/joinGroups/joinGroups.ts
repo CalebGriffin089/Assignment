@@ -28,7 +28,7 @@ export class JoinGroups{
     groupId: this.groupName
   }
 
-  this.httpService.post(`${this.server}/api/createGroupRequest`, userData).pipe(
+  this.httpService.post(`${this.server}/api/createGroupJoinRequest`, userData).pipe(
     catchError((error) => {
       console.error('Error during login:', error);
       return of(null);  // Return null if there is an error

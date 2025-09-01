@@ -2,12 +2,12 @@ const express = require("express");
 const fs = require("fs");
 const path = require("path");
 
-const router = express.Router(); // <-- use router, not app
+const router = express.Router();
 
 router.post("/", (req, res) => {
   const requestsFile = path.join(__dirname, "../data/groupRequests.txt");
 
-  // Step 1: Read requests.txt to get all registration requests
+  // Read groupRequests.txt
   fs.readFile(requestsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading requests.txt");
@@ -27,9 +27,9 @@ router.post("/", (req, res) => {
         response.push(requests[i]);
       }
     }
-    // Step 2: Send all requests as a response
+    // Send all requests as a response
     res.json({ response: response });
   });
 });
 
-module.exports = router; // <-- export router
+module.exports = router;
