@@ -944,29 +944,29 @@ Return Values:
 - app.html: the main html file where everything is displayed
 # Angular Architecture:
 ## Components Directory (/app/components):
-•	/chat/
+- /chat/
     -	chat.html: The HTML template for the chat component
     -	chat.ts: the typescript file for the logic and behaviour of the chat component
-•	/create/
+- /create/
     -	create.html: The HTML template for the Create component.
     -	create.ts: the typescript file for the logic of the create component
-•	/createGroups/
+- /createGroups/
     -	createGroups.html: The HTML template for the createGroups component.
     -	createGroups.ts: the typescript file for the logic of the create component
-•	/deleteUser/
+- /deleteUser/
     -	deleteUser.html: The HTML template for the deleteUser component.
     -	deleteUser.ts: the typescript file for the logic of the deleteUser component
-•	/joinGrous/
+- /joinGrous/
     -	joinGrous.html: The HTML template for the joinGrous component.
     -	joinGrous.ts: the typescript file for the logic of the joinGrous component
-•	/login/
+- /login/
     -	login.html: The HTML template for the login component.
     -	login.ts: the typescript file for the logic of the login component
-•	/requests/
+- /requests/
     -	requests.html: The HTML template for the requests component.
     -	requests.ts: the typescript file for the logic of the requests component
 Services Directory (/services)
-•	/sockets/
+- /sockets/
     -	sockets.spec.ts
     -	sockets.ts
 ## Main Module File:
