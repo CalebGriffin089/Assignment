@@ -21,7 +21,6 @@
   // Middleware
   app.use(express.static(__dirname + '/www'));
   app.use(express.json());
-  app.use("/api/join", require("./routes/joinGroup.js"));
   app.use("/api/getGroups", require("./routes/getGroups.js"));
   app.use("/api/getChannels", require("./routes/getChannels.js"));
   app.use("/api/delete", require("./routes/deleteUsers.js"));
