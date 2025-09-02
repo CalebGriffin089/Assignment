@@ -215,7 +215,7 @@ Return Values:
 -	HTTP POST
 ## Endpoint:
 -	/api/ban
-##Parameters:
+## Parameters:
 -	id (string): The username of the user to be banned.
 -	currentGroup (string): The ID of the group from which the user is to be banned.
 ## Return Values:
@@ -978,4 +978,3 @@ Services Directory (/services)
     - app-routing-module.ts: defines all the routes to navigate to each component
     - app.ts: the typescript file for app.html
     - app.html: the main html file where everything is displayed
-
