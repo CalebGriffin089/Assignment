@@ -311,17 +311,19 @@ On Success:
 ## How It Works:
 1.	Make the channels object:
     - Create a json object called channelData that contains a base id of 0 the given groupId, the given channel name, an array for admins that starts with the creator of the channel, an empty array for banned members, and a members array with the creator as the channel member.
-2.	Read the groups file 
+2.  Read the users file
+    - await the users file to find all super admins and add them as members to the channel
+3.	Read the groups file 
     - Read and parse the groups.txt file
-3.	Check if the group exists
+4.	Check if the group exists
     - Check the groups file for the group we are trying to add the channel to
-4.	Read the channels file 
+5.	Read the channels file 
     - Read and parse the channels file
-5.	Find the highest ID in the channels file
+6.	Find the highest ID in the channels file
     - Search the channels file for the channel with the highest ID then set that id +1 as the new channels id
-6.	Add the channel
+7.	Add the channel
     - Add the channel to the channels file
-7.	Return Success:
+8.	Return Success:
     - {  valid: true, channelId: channelData.id }
 
 # Create Groups:
@@ -346,23 +348,25 @@ On Success:
     - {  valid: true, groupId: groupData.id }
 	
 ## How It Works:
-1.	Creates a groupData object:
-    - Creates a groupData object with a base id of 0 a base channel array with the channel passed to it as an element, makes an admin array with the creator as its element same with a members array, and a banned array that is empty
-2.	Reads groups file
-    - Reads and parses the groups file
+1.  Reads the users file 
+    - Read and parse the users file
+2.  Read the groups file    
+    - read and parse the groups file
 3.	Find the new groupId
     - Finds the highest group id and adds 1 for the new group is
-4.	Updates groups file
+4.  Find all super admins
+    - Find all super admins and add them to the groups members array
+5.	Updates groups file
     - Updates changes to the groups file
-5.	Reads users file
+6.	Reads users file
     - Read and parses the user file
-6.	Finds the user 
+7.	Finds the user 
     - Find the user in the file
-7.	Updates user file 
+8.	Updates user file 
     - Updates the user file to include the creator as a member of the group
-8.	Repeats create channel API
+9.	Repeats create channel API
     - Creates the base channel given the new channel name and new group Id. The same as what the createChannels API does
-9.	Returns Success:
+10.	Returns Success:
     - Returns: { valid: true, groupId: groupData.id }
 # Create Group Join Request;
 ## Method:
