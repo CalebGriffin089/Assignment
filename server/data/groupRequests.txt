@@ -1,16 +1,2 @@
 [
-  {
-    "username": "Hi2",
-    "groupId": "0",
-    "status": "pending",
-    "permission": "user",
-    "need": "Join Permission"
-  },
-  {
-    "username": "Hi",
-    "groupId": "1",
-    "status": "pending",
-    "permission": "user",
-    "need": "Join Permission"
-  }
 ]

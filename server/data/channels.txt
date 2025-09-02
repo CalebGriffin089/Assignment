@@ -12,53 +12,5 @@
     "members": [
       "Hi"
     ]
-  },
-  {
-    "id": 2,
-    "groupId": 0,
-    "name": "3",
-    "admins": [
-      "Hi"
-    ],
-    "banned": [],
-    "members": [
-      "Hi"
-    ]
-  },
-  {
-    "id": 3,
-    "groupId": "1",
-    "name": "sd",
-    "admins": [
-      "Hi"
-    ],
-    "banned": [],
-    "members": [
-      "Hi"
-    ]
-  },
-  {
-    "id": 4,
-    "groupId": 0,
-    "name": "1",
-    "admins": [
-      "Hi"
-    ],
-    "banned": [],
-    "members": [
-      "Hi"
-    ]
-  },
-  {
-    "id": 5,
-    "groupId": 0,
-    "name": "9",
-    "admins": [
-      "Hi"
-    ],
-    "banned": [],
-    "members": [
-      "Hi"
-    ]
   }
 ]

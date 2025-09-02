@@ -5,7 +5,7 @@ const path = require("path");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const { groupId, name, members } = req.body;
 
   const channelData = {
@@ -19,6 +19,30 @@ router.post("/", (req, res) => {
 
   const channelsFile = path.join(__dirname, "../data/channels.txt");
   const groupsFile = path.join(__dirname, "../data/groups.txt");
+  const usersFile = path.join(__dirname, "../data/users.txt");
+
+  await fs.readFile(usersFile, "utf8", (err, uData) => {
+    if (err) {
+      console.log("Error reading users file");
+      return res.json({ error: "Internal server error (users)" });
+    }
+
+    let userFileData = [];
+    try {
+      userFileData = JSON.parse(uData);
+    } catch (err) {
+      console.log("Error parsing users.txt");
+      return res.json({ error: "Corrupted users data" });
+    }
+
+    for(let i =0; i<userFileData.length;i++){
+      if(userFileData[i].roles.includes('superAdmin')){
+        channelData.members.push(userFileData[i].username);
+        channelData.admins.push(userFileData[i].username);
+      }
+    }
+  });
+
 
   //read the groups file
   fs.readFile(groupsFile, "utf8", (err, data) => {

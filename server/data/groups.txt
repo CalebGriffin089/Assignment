@@ -6,37 +6,13 @@
       "sd"
     ],
     "admins": [
-      "Hi"
+      "Hi",
+      "Test"
     ],
     "banned": [],
     "members": [
-      "Hi"
-    ]
-  },
-  {
-    "id": 2,
-    "channels": [
-      "1"
-    ],
-    "admins": [
-      "Hi"
-    ],
-    "banned": [],
-    "members": [
-      "Hi"
-    ]
-  },
-  {
-    "id": 3,
-    "channels": [
-      "9"
-    ],
-    "admins": [
-      "Hi"
-    ],
-    "banned": [],
-    "members": [
-      "Hi"
+      "Hi",
+      "Test"
     ]
   }
 ]

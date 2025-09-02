@@ -90,41 +90,45 @@ router.post("/", (req, res) => {
           }
 
           //remove the user's request from accountRequests.txt
-          fs.readFile(requestsFile, "utf8", (err, requestsData) => {
-            if (err) {
-              console.log("Error reading accountRequests file");
-              return res.json({ error: "Internal server error (requests)" });
-            }
-
-            let requests = [];
-            try {
-              requests = JSON.parse(requestsData);
-            } catch (err) {
-              console.log("Error parsing accountRequests.txt");
-              return res.json({ error: "Corrupted requests data" });
-            }
-
-            // Remove the request from groupRequests.txt
-            const requestIndex = requests.findIndex(req => req.username === user.username && req.groupId === user.groupId);
-            if (requestIndex !== -1) {
-              requests.splice(requestIndex, 1);
-            }
-
-            // update groupRequests.txt
-            fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
-              if (err) {
-                console.log("Error writing to accountRequests file");
-                return res.json({ error: "Failed to update requests file" });
-              }
-
-              console.log(`${user.username} has joined the group ${user.groupId}`);
-            });
-          });
+          
           res.json({ valid: true }); 
         });
       });
     });
   });
+  function removeRequest(){
+    fs.readFile(requestsFile, "utf8", (err, requestsData) => {
+      if (err) {
+        console.log("Error reading accountRequests file");
+        return res.json({ error: "Internal server error (requests)" });
+      }
+
+      let requests = [];
+      try {
+        requests = JSON.parse(requestsData);
+      } catch (err) {
+        console.log("Error parsing accountRequests.txt");
+        return res.json({ error: "Corrupted requests data" });
+      }
+
+      // Remove the request from groupRequests.txt
+      const requestIndex = requests.findIndex(req => req.username === user.username && req.groupId === user.groupId);
+      if (requestIndex !== -1) {
+        requests.splice(requestIndex, 1);
+      }
+
+      // update groupRequests.txt
+      fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
+        if (err) {
+          console.log("Error writing to accountRequests file");
+          return res.json({ error: "Failed to update requests file" });
+        }
+
+        console.log(`${user.username} has joined the group ${user.groupId}`);
+      });
+    });
+  };
+
 });
 
 module.exports = router;
