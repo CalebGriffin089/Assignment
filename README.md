@@ -112,13 +112,13 @@ All files are stored as JSON arrays with example below
       { "valid": true }.
 # Accept Users:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/acceptUser
+-	/api/acceptUser
 ## Parameters:
-•	username (string): The desired username for the new user.
-•	email (string): The email address of the new user.
-•	password (string): The password of the new user.
+-	username (string): The desired username for the new user.
+-	email (string): The email address of the new user.
+-	password (string): The password of the new user.
 ## Return Values:
 - Internal server errors (reading file):
     - { "error": "Internal server error (file name)" }
@@ -149,12 +149,12 @@ All files are stored as JSON arrays with example below
 
 # addChannnels:
 ## Method:
-•	HTTP POST
+- HTTP POST
 ## Endpoint:
-•	/api/addChannel
+- /api/addChannel
 ## Parameters:
-•	groupId (string): The ID of the group to which the channels should be added.
-•	newChannels (string): the name of the new channel to add
+- groupId (string): The ID of the group to which the channels should be added.
+- newChannels (string): the name of the new channel to add
 Return Values:
 1.	Internal server errors reading groups file:
     - { "error": "Internal server error groups" }
@@ -178,12 +178,12 @@ Return Values:
       { success: true, channels: group.channels }
 # Auth:
 ## Method:
-•	HTTP POST
+- HTTP POST
 ## Endpoint:
-•	/api/auth
+- /api/auth
 ## Parameters:
-•	username (string): The username of the user attempting to log in.
-•	password (string): The password of the user attempting to log in.
+-	username (string): The username of the user attempting to log in.
+-	password (string): The password of the user attempting to log in.
 ## Return values:
 1.	Internal server errors reading users file: 
     - { error: "Internal server error (users)" }
@@ -212,12 +212,12 @@ Return Values:
 
 # banUser:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/ban
+-	/api/ban
 ##Parameters:
-•	id (string): The username of the user to be banned.
-•	currentGroup (string): The ID of the group from which the user is to be banned.
+-	id (string): The username of the user to be banned.
+-	currentGroup (string): The ID of the group from which the user is to be banned.
 ## Return Values:
 1.	Internal server errors (reading file):
     - { "error": "Internal server error (users)" }
@@ -249,12 +249,12 @@ Write the updates data to the files
 
 # BanUserChannel
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/banUserChannel
+-	/api/banUserChannel
 ## Parameters:
-•	id (string): The username of the user to be banned from the channel.
-•	currentGroup (string): The ID of the group whose channel the user is being banned from. Will be parsed as an integer when find the group
+-	id (string): The username of the user to be banned from the channel.
+-	currentGroup (string): The ID of the group whose channel the user is being banned from. Will be parsed as an integer when find the group
 ## Return Values:
 1.	Internal server errors reading file:
     - {  "error": "Internal server error (file)" }
@@ -284,13 +284,13 @@ Write the updates data to the files
     - Return: { success: true }
 # Create channel:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/createChannel
+-	/api/createChannel
 ## Parameters:
-•	groupId (string): The ID of the group where the channel will be created.
-•	name (string): The name of the new channel.
-•	members (string): the username of the user creating the channel
+-	groupId (string): The ID of the group where the channel will be created.
+-	name (string): The name of the new channel.
+-	members (string): the username of the user creating the channel
 Return Values:
 1.	Missing required fields (groupId, name, members):
     - {  "error": "Missing required fields: groupId, name, members" }
@@ -328,13 +328,13 @@ On Success:
 
 # Create Groups:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/createGroup
+-	/api/createGroup
 ## Parameters:
-•	groupId (string): The ID of the group being created (auto-generated).
-•	channels (string): An array of channels for the group (at least one channel should be specified).
-•	members (array of strings): An array containing the username of the group creator (the first user will be the admin and only member at first).
+-	groupId (string): The ID of the group being created (auto-generated).
+-	channels (string): An array of channels for the group (at least one channel should be specified).
+-	members (array of strings): An array containing the username of the group creator (the first user will be the admin and only member at first).
 ## Return Values:
 1.	Error reading file:
     - {  "error": "Internal server error (file)" }
@@ -370,12 +370,12 @@ On Success:
     - Returns: { valid: true, groupId: groupData.id }
 # Create Group Join Request;
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/createGroupJoinRequest
+-	/api/createGroupJoinRequest
 ## Parameters:
-•	username (string): The username of the user requesting to join a group.
-•	groupId (string): The ID of the group the user wants to join.
+-	username (string): The username of the user requesting to join a group.
+-	groupId (string): The ID of the group the user wants to join.
 ## Return Values:
 1.	Error reading file:
     - {  "error": "Internal server error (file)" }
@@ -401,13 +401,13 @@ On Success:
 
 # Create User Request:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/create
+-	/api/create
 ## Parameters:
-•	username (string): The username of the user requesting to register.
-•	email (string): The email address of the user requesting to register.
-•	password (string): The password of the user requesting to register.
+-	username (string): The username of the user requesting to register.
+-	email (string): The email address of the user requesting to register.
+-	password (string): The password of the user requesting to register.
 ## Return Values:
 Error Scenarios:
 1.	Error reading file:
@@ -444,12 +444,12 @@ Error Scenarios:
 
 # Decline
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/decline
+-	/api/decline
 ## Parameters:
-•	username (string): The username of the user whose request is being declined.
-•	file (string): Specifies whether the request is related to a group (groupRequests) or account (accountRequests).
+-	username (string): The username of the user whose request is being declined.
+-	file (string): Specifies whether the request is related to a group (groupRequests) or account (accountRequests).
 ## Return Values:
 1.	Error reading request file:
     - {  "error": "Internal server error (requests)" }
@@ -470,12 +470,12 @@ Error Scenarios:
 # Delete Channel:
 
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/deleteChannel
+-	/api/deleteChannel
 ## Parameters:
-•	groupId (string): The ID of the group from which the channel is being deleted.
-•	channel (string): The name or ID of the channel to be deleted.
+-	groupId (string): The ID of the group from which the channel is being deleted.
+-	channel (string): The name or ID of the channel to be deleted.
 ## Return Values:
 1.	Error reading the file:
     - {  "error": "Internal server error (file)" }
@@ -510,11 +510,11 @@ Error Scenarios:
 
 # Delete Groups:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/deleteGroups
+-	/api/deleteGroups
 ## Parameters:
-•	groupId (string): The ID of the group to be deleted.
+-	groupId (string): The ID of the group to be deleted.
 ## Return Values:
 1.	Error reading the file:
     - {  "error": "Internal server error (file)" }
@@ -550,11 +550,11 @@ Error Scenarios:
 
 # Delete User:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/delete
+-	/api/delete
 ## Parameters:
-•	username (string): The username of the user to be deleted.
+-	username (string): The username of the user to be deleted.
 ## Return Values:
 1.	Error reading the file:
     - {  "error": "Internal server error (file)" }
@@ -582,12 +582,12 @@ Error Scenarios:
 
 # getAdmin:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/getAdmin
+-	/api/getAdmin
 ## Parameters:
-•	id (string): The ID of the group.
-•	username (string): The username of the user whose admin status is being checked.
+-	id (string): The ID of the group.
+-	username (string): The username of the user whose admin status is being checked.
 ## Return Values:
 1.	Error reading the file:
     - {  "error": "Internal server error (file)" }
@@ -612,12 +612,12 @@ Error Scenarios:
 
 # getChannels
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/getChannels
+-	/api/getChannels
 ## Parameters:
-•	id (string): The ID of the group whose channels are being checked.
-•	username (string): The username of the user whose allowed channels are being fetched.
+-	id (string): The ID of the group whose channels are being checked.
+-	username (string): The username of the user whose allowed channels are being fetched.
 Return Values:
 1.	Error reading the file:
     - {  "error": "Internal server error (file)" }
@@ -642,11 +642,11 @@ Return Values:
 
 # GetGroupRequests:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/getGroupRequests
+-	/api/getGroupRequests
 ## Parameters:
-•	groupId (string): The ID of the group for which the requests are being fetched.
+-	groupId (string): The ID of the group for which the requests are being fetched.
 ## Return Values:
 1.	Error reading the requests.txt file:
     - {  "error": "Internal server error (requests)" }
@@ -664,11 +664,11 @@ Return Values:
 
 # GetGroups
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/getGroups
+-	/api/getGroups
 ## Parameters:
-•	username (string): The username of the user whose groups are being retrieved.
+-	username (string): The username of the user whose groups are being retrieved.
 ## Return Values:
 1.	Error reading the users.txt file:
     - {  "error": "Internal server error (users)" }
@@ -686,11 +686,11 @@ Return Values:
 
 # Get User Requests:
 ## Method:
-•	HTTP GET
+-	HTTP GET
 ## Endpoint:
-•	/api/getRequests
+-	/api/getRequests
 ## Parameters:
-•	None (Data is fetched from the file accountRequests.txt).
+-	None (Data is fetched from the file accountRequests.txt).
 ## Return Values:
 1.	Error reading the accountRequests.txt file:
     - {  "error": "Internal server error (requests)" }
@@ -705,12 +705,12 @@ Return Values:
 
 # Join Channels:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/joinChannel
+-	/api/joinChannel
 ## Parameters:
-•	username (string): The username of the user attempting to join the channel.
-•	newChannel (string): The name of the channel the user is attempting to join.
+-	username (string): The username of the user attempting to join the channel.
+-	newChannel (string): The name of the channel the user is attempting to join.
 ## Return Values:
 1.	Error Scenarios:
 2.	Error reading the channels.txt file:
@@ -735,12 +735,12 @@ Return Values:
 
 # Kick user channel:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/kickUserChannel
+-	/api/kickUserChannel
 ## Parameters:
-•	id (string): The username of the user being removed from the channel.
-•	currentChannel (string): The name of the channel from which the user will be removed.
+-	id (string): The username of the user being removed from the channel.
+-	currentChannel (string): The name of the channel from which the user will be removed.
 ## Return Values:
 1.	Error reading the file:
     - {  "error": "Internal server error (file)" }
@@ -768,12 +768,12 @@ Return Values:
 
 # Kick the user from a group:
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/kickUserGroups
+-	/api/kickUserGroups
 ## Parameters:
-•	id (string): The username of the user being removed from the group.
-•	currentGroup (string): The ID of the group from which the user will be removed.
+-	id (string): The username of the user being removed from the group.
+-	currentGroup (string): The ID of the group from which the user will be removed.
 ## Return Values:
 1.	Error reading file:
     - {  "error": "Internal server error (file)" }
@@ -807,12 +807,12 @@ Return Values:
 # Leave group:
 
 ## Method:
-•	HTTP POST
+-	HTTP POST
 ## Endpoint:
-•	/api/leaveGroup
+-	/api/leaveGroup
 ## Parameters:
-•	id (string): The username of the user to be banned from the group.
-•	currentGroup (string): The ID of the group from which the user will be banned.
+-	id (string): The username of the user to be banned from the group.
+-	currentGroup (string): The ID of the group from which the user will be banned.
 ## Return Values:
 1.	Error reading the file:
     - {  "error": "Internal server error (file)" }
@@ -840,11 +840,11 @@ Return Values:
 
 # Promote user to super admin:
 ## Method:
-•	POST
+-	POST
 ## Endpoint:
-•	/api/promoteSuperAdmin
+-	/api/promoteSuperAdmin
 ## Parameters:
-•	username (string): The username of the user who will be assigned the "superAdmin" role.
+-	username (string): The username of the user who will be assigned the "superAdmin" role.
 ## Return Values:
 1.	Error reading users.txt:
     - {  "error": "Internal server error (users)" }
@@ -867,12 +867,12 @@ Return Values:
 
 # Promote user:
 ## Method:
-•	POST
+-	POST
 ## Endpoint:
-•	/api/promoteUser
+-	/api/promoteUser
 ## Parameters:
-•	id (string): The ID of the user to be promoted to admin.
-•	currentGroup (string or number): The ID of the group in which the user will be promoted to admin.
+-	id (string): The ID of the user to be promoted to admin.
+-	currentGroup (string or number): The ID of the group in which the user will be promoted to admin.
 ## Return Values:
 1.	Error reading the file:
     - {  "error": "Internal server error (file)" }
