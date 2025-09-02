@@ -15,12 +15,24 @@
     "email": "12",
     "password": "12",
     "groups": [
-      "1"
+      "1",
+      "2",
+      "3"
     ],
     "roles": [
       "admin",
       "user",
       "superAdmin"
+    ]
+  },
+  {
+    "id": 4,
+    "username": "Test4",
+    "email": "34",
+    "password": "12",
+    "groups": [],
+    "roles": [
+      "user"
     ]
   }
 ]

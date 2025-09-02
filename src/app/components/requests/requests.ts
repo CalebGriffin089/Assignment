@@ -28,6 +28,25 @@ export class Requests {
     if (rolesArray.includes("superAdmin")) {
       this.isSuperAdmin = true;
     }
+    this.httpService.get(`${this.server}/api/getUserRequests`).pipe(
+      map((response: any) => {
+        console.log('response');
+        // Assuming response is an object with a 'requests' property that contains an array
+        if (response && Array.isArray(response.requests)) {
+          // Store the 'requests' array in the class's requests property
+          this.requestsUsers = response.requests;
+        } else {
+          console.warn('Unexpected response format:', response);
+          this.requestsUsers = [];  // Default to empty array if response is not in expected format
+        }
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe(() => {
+      console.log(this.requestsUsers);
+    });
 
   }
   

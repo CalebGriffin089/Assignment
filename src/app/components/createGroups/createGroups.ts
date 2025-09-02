@@ -13,7 +13,7 @@ export class CreateGroup {
   server = 'http://localhost:3000';
   groupData = { 
           id: null,
-          channels: [],
+          channels: '',
           admins: [localStorage.getItem("username")],
           banned: null,
           members: [localStorage.getItem("username")]

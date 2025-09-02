@@ -4,7 +4,7 @@ const path = require("path");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
+router.get("/", (req, res) => {
   const requestsFile = path.join(__dirname, "../data/accountRequests.txt");
 
   // Read requests.txt to get all registration requests
