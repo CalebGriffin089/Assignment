@@ -68,11 +68,11 @@ router.post("/", (req, res) => {
       }
 
       //check if username is already requested
-      const exists = requestsData.some(u => u.username === user.username);
+      const exists = requests.some(u => u.username === user.username);
       if (exists) {
         return res.json({ valid: false });
       }
-
+      
       // Add the new request to the requests array
       requests.push(request);
       // update requests.txt

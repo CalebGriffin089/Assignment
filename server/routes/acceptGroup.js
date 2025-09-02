@@ -18,7 +18,7 @@ router.post("/", (req, res) => {
   fs.readFile(usersFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading users file");
-      return res.status(500).json({ error: "Internal server error (users)" });
+      return res.json({ error: "Internal server error (users)" });
     }
 
     let usersData = [];
@@ -26,26 +26,26 @@ router.post("/", (req, res) => {
       usersData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing users.txt");
-      return res.status(500).json({ error: "Corrupted users data" });
+      return res.json({ error: "Corrupted users data" });
     }
     
     // Find the user in the users data
     const userIndex = usersData.findIndex(u => u.username === user.username);
     if (userIndex === -1) {
       removeRequest();
-      return res.status(404).json({ error: "User not found" });
+      return res.json({ error: "User not found" });
     }
     // Check if the user is banned
     if (usersData[userIndex].isBanned) {
       removeRequest();
-      return res.status(403).json({ error: "User is banned and cannot join a group" });
+      return res.json({ error: "User is banned and cannot join a group" });
     }
 
     // find the group the user wants to join
     fs.readFile(groupsFile, "utf8", (err, groupData) => {
       if (err) {
         console.log("Error reading groups file");
-        return res.status(500).json({ error: "Internal server error (groups)" });
+        return res.json({ error: "Internal server error (groups)" });
       }
 
       let groups = [];
@@ -53,20 +53,20 @@ router.post("/", (req, res) => {
         groups = JSON.parse(groupData);
       } catch (err) {
         console.log("Error parsing groups.txt");
-        return res.status(500).json({ error: "Corrupted groups data" });
+        return res.json({ error: "Corrupted groups data" });
       }
 
       // Find the group by ID
       const groupIndex = groups.findIndex(g => g.id === parseInt(user.groupId));
       if (groupIndex === -1) {
         removeRequest();
-        return res.status(404).json({ error: "Group not found" });
+        return res.json({ error: "Group not found" });
       }
       
       // Check if the user is already a member of the group
       if (groups[groupIndex].members.includes(user.username)) {
         removeRequest();
-        return res.status(400).json({ error: "User is already a member of this group" });
+        return res.json({ error: "User is already a member of this group" });
       }
 
       // Add the user to the group's members array
@@ -76,7 +76,7 @@ router.post("/", (req, res) => {
       fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing to groups file");
-          return res.status(500).json({ error: "Failed to update groups file" });
+          return res.json({ error: "Failed to update groups file" });
         }
 
         // add the groupId to the user's groups array in users.txt
@@ -86,14 +86,14 @@ router.post("/", (req, res) => {
         fs.writeFile(usersFile, JSON.stringify(usersData, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing to users file");
-            return res.status(500).json({ error: "Failed to update users file" });
+            return res.json({ error: "Failed to update users file" });
           }
 
           //remove the user's request from accountRequests.txt
           fs.readFile(requestsFile, "utf8", (err, requestsData) => {
             if (err) {
               console.log("Error reading accountRequests file");
-              return res.status(500).json({ error: "Internal server error (requests)" });
+              return res.json({ error: "Internal server error (requests)" });
             }
 
             let requests = [];
@@ -101,7 +101,7 @@ router.post("/", (req, res) => {
               requests = JSON.parse(requestsData);
             } catch (err) {
               console.log("Error parsing accountRequests.txt");
-              return res.status(500).json({ error: "Corrupted requests data" });
+              return res.json({ error: "Corrupted requests data" });
             }
 
             // Remove the request from groupRequests.txt
@@ -114,13 +114,13 @@ router.post("/", (req, res) => {
             fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
               if (err) {
                 console.log("Error writing to accountRequests file");
-                return res.status(500).json({ error: "Failed to update requests file" });
+                return res.json({ error: "Failed to update requests file" });
               }
 
               console.log(`${user.username} has joined the group ${user.groupId}`);
             });
           });
-          res.json({ valid: true, message: `${user.username} successfully joined the group` }); 
+          res.json({ valid: true }); 
         });
       });
     });
