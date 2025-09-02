@@ -1,6 +1,6 @@
-#File formats:
+# File formats:
 All files are stored as JSON arrays with example below
-##accountRequests.txt:
+## accountRequests.txt:
 [
   {
     "username": " username ",
@@ -8,7 +8,7 @@ All files are stored as JSON arrays with example below
     "password": " password "
   }
 ]
-##Channels.txt:
+## Channels.txt:
 [
   {
     "id": id,
@@ -26,7 +26,7 @@ All files are stored as JSON arrays with example below
   }
 ]
 
-##groupRequests.txt:
+## groupRequests.txt:
 [
   {
     "username": "username ",
@@ -36,7 +36,7 @@ All files are stored as JSON arrays with example below
     "need": "need”
   }
 ]
-##Groups.txt
+## Groups.txt
 [
   {
     "id": id,
@@ -54,7 +54,7 @@ All files are stored as JSON arrays with example below
 ]
 
 
-##Users.txt:
+## Users.txt:
 [
   {
     "id": id,
@@ -68,16 +68,16 @@ All files are stored as JSON arrays with example below
   }
 ]
 
-#Accept group
-##Method:
+# Accept group
+## Method:
 - HTTP POST
-##Endpoint:
+## Endpoint:
 - /api/acceptGroup
-##Parameters:
+## Parameters:
 - username: string, Username of the user trying to join the group 
 - groupId: string, ID of the group the user is requesting to join. This ID is passed as a string but will be parsed as an integer while searching for the group.
 
-##Return Values:
+## Return Values:
 - Internal server errors (e.g., file read/write issues or corrupted data):
     - { "error": "Internal server error (file)" }
 - Error Parsing file:
