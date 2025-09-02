@@ -17,7 +17,7 @@ router.post("/", (req, res) => {
   fs.readFile(requestsFile, "utf8", (err, requestsData) => {
     if (err) {
       console.log("Error reading accountRequests file");
-      return res.status(500).json({ error: "Internal server error (requests)" });
+      return res.json({ error: "Internal server error (requests)" });
     }
 
     let requests = [];
@@ -25,7 +25,7 @@ router.post("/", (req, res) => {
       requests = JSON.parse(requestsData);
     } catch (err) {
       console.log("Error parsing accountRequests.txt");
-      return res.status(500).json({ error: "Corrupted requests data" });
+      return resjson({ error: "Corrupted requests data" });
     }
 
     // Remove the request from the request file
@@ -38,7 +38,7 @@ router.post("/", (req, res) => {
     fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing to accountRequests file");
-        return res.status(500).json({ error: "Failed to update requests file" });
+        return res.json({ error: "Failed to update requests file" });
       }
 
       console.log(`${user.username} has declined the group ${user.groupId}`);

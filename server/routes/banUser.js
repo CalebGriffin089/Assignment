@@ -15,7 +15,7 @@ router.post("/", (req, res) => {
   fs.readFile(usersFile, "utf8", (err, userData) => {
     if (err) {
       console.log("Error reading users.txt");
-      return res.status(500).json({ error: "Internal server error (users)" });
+      return res.json({ error: "Internal server error (users)" });
     }
 
     let users = [];
@@ -23,7 +23,7 @@ router.post("/", (req, res) => {
       users = JSON.parse(userData);
     } catch (err) {
       console.log("Error parsing users.txt");
-      return res.status(500).json({ error: "Corrupted users data" });
+      return res.json({ error: "Corrupted users data" });
     }
 
     // Find the user by id and remove the currentGroup id from their groups array
@@ -44,7 +44,7 @@ router.post("/", (req, res) => {
     fs.readFile(groupsFile, "utf8", (err, groupData) => {
       if (err) {
         console.log("Error reading groups.txt");
-        return res.status(500).json({ error: "Internal server error (groups)" });
+        return res.json({ error: "Internal server error (groups)" });
       }
 
       let groups = [];
@@ -52,12 +52,12 @@ router.post("/", (req, res) => {
         groups = JSON.parse(groupData);
       } catch (err) {
         console.log("Error parsing groups.txt");
-        return res.status(500).json({ error: "Corrupted group data" });
+        return res.json({ error: "Corrupted group data" });
       }
 
       const group = groups.find(g => parseInt(g.id) === parseInt(currentGroup));
       if (!group) {
-        return res.status(404).json({ success: false, message: "Group not found" });
+        return res.json({ success: false, message: "Group not found" });
       }
 
       const memberIndex = group.members.indexOf(id);
@@ -73,24 +73,24 @@ router.post("/", (req, res) => {
       fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing groups.txt");
-          return res.status(500).json({ error: "Failed to update groups" });
+          return res.json({ error: "Failed to update groups" });
         }
 
     // Save updated groups.txt
     fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing groups.txt");
-        return res.status(500).json({ error: "Failed to update groups" });
+        return res.json({ error: "Failed to update groups" });
       }
 
         fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing users.txt");
-            return res.status(500).json({ error: "Failed to update users" });
+            return res.json({ error: "Failed to update users" });
           }
 
           console.log(`User ${id} banned from group ${currentGroup} and removed from user's groups`);
-          res.json({ success: true, message: `User ${id} banned from group ${currentGroup}` });
+          res.json({ success: true });
         });
       });
     });

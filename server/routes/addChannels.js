@@ -13,7 +13,7 @@ router.post("/", (req, res) => {
   fs.readFile(groupsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading groups file");
-      return res.status(500).json({ error: "Internal server error (groups)" });
+      return res.json({ error: "Internal server error (groups)" });
     }
 
     let groupsData = [];
@@ -21,12 +21,12 @@ router.post("/", (req, res) => {
       groupsData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing groups.txt");
-      return res.status(500).json({ error: "Corrupted groups data" });
+      return res.json({ error: "Corrupted groups data" });
     }
 
     const group = groupsData.find(g => parseInt(g.id) === parseInt(groupId));
     if (!group) {
-      return res.status(404).json({ error: "Group not found" });
+      return res.json({ error: "Group not found" });
     }
 
     // Add new channels, avoiding duplicates
@@ -38,7 +38,7 @@ router.post("/", (req, res) => {
     fs.writeFile(groupsFile, JSON.stringify(groupsData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing groups file");
-        return res.status(500).json({ error: "Failed to update groups" });
+        return res.json({ error: "Failed to update groups" });
       }
 
       console.log(`Added channels to group ${groupId}:`, newChannels);

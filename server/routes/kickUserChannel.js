@@ -13,7 +13,7 @@ router.post("/", (req, res) => {
   fs.readFile(usersFile, "utf8", (err, userData) => {
       if (err) {
         console.log("Error reading users.txt");
-        return res.status(500).json({ error: "Internal server error (users)" });
+        return res.json({ error: "Internal server error (users)" });
       }
 
       let users = [];
@@ -21,7 +21,7 @@ router.post("/", (req, res) => {
         users = JSON.parse(userData);
       } catch (err) {
         console.log("Error parsing users.txt");
-        return res.status(500).json({ error: "Corrupted users data" });
+        return res.json({ error: "Corrupted users data" });
       }
 
       // Find the user by id and remove the currentGroup id from their groups array
@@ -35,7 +35,7 @@ router.post("/", (req, res) => {
       fs.readFile(channelsFile, "utf8", async (err, channelData) => {
         if (err) {
           console.log("Error reading channels.txt");
-          return res.status(500).json({ error: "Internal server error (channels)" });
+          return res.json({ error: "Internal server error (channels)" });
         }
 
         let channels = [];
@@ -43,7 +43,7 @@ router.post("/", (req, res) => {
           channels = JSON.parse(channelData);
         } catch (err) {
           console.log("Error parsing channels.txt");
-          return res.status(500).json({ error: "Corrupted channel data" });
+          return res.json({ error: "Corrupted channel data" });
         }
 
         // Find the channel corresponding to the groupId
@@ -51,19 +51,16 @@ router.post("/", (req, res) => {
         
         
         if (!channel) {
-          return res.status(404).json({ success: false, message: "Channel not found for the group" });
+          return res.json({ success: false, message: "Channel not found for the group" });
         }
 
         const userIndex = channel.members.indexOf(id);
         if (userIndex === -1) {
-          return res.status(404).json({ success: false, message: "User is not a member of the channel" });
+          return res.json({ success: false, message: "User is not a member of the channel" });
         }
 
         // Remove the user from the members list
         channel.members.splice(userIndex, 1);
-
-        
-
 
         // update channels.txt
         fs.writeFile(channelsFile, JSON.stringify(channels, null, 2), "utf8", (err) => {

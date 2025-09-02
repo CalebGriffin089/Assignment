@@ -2,7 +2,8 @@
   {
     "id": 1,
     "channels": [
-      "3"
+      "3",
+      "sd"
     ],
     "admins": [
       "Hi"

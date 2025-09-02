@@ -9,13 +9,13 @@ router.post("/", (req, res) => {
 
   const usersFile = path.join(__dirname, "../data/users.txt");
   const groupsFile = path.join(__dirname, "../data/groups.txt");
-  const channelsFile = path.join(__dirname, "../data/channels.txt"); // <-- NEW
+  const channelsFile = path.join(__dirname, "../data/channels.txt");
 
   //Read groups.txt
   fs.readFile(groupsFile, "utf8", (err, groupData) => {
     if (err) {
       console.log("Error reading groups.txt");
-      return res.status(500).json({ error: "Internal server error (groups)" });
+      return res.json({ error: "Internal server error (groups)" });
     }
 
     let groups = [];
@@ -23,12 +23,12 @@ router.post("/", (req, res) => {
       groups = JSON.parse(groupData);
     } catch (err) {
       console.log("Error parsing groups.txt");
-      return res.status(500).json({ error: "Corrupted group data" });
+      return res.json({ error: "Corrupted group data" });
     }
 
     const groupIndex = groups.findIndex(g => parseInt(g.id) === parseInt(groupIdToDelete));
     if (groupIndex === -1) {
-      return res.status(404).json({ success: false, message: "Group not found" });
+      return res.json({ success: false, message: "Group not found" });
     }
 
     // Remove the group
@@ -38,14 +38,14 @@ router.post("/", (req, res) => {
     fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing groups.txt");
-        return res.status(500).json({ error: "Failed to update groups.txt" });
+        return res.json({ error: "Failed to update groups.txt" });
       }
 
       // Read channels.txt
       fs.readFile(channelsFile, "utf8", (err, channelData) => {
         if (err) {
           console.log("Error reading channels.txt");
-          return res.status(500).json({ error: "Internal server error (channels)" });
+          return res.json({ error: "Internal server error (channels)" });
         }
 
         let channels = [];
@@ -53,7 +53,7 @@ router.post("/", (req, res) => {
           channels = JSON.parse(channelData);
         } catch (err) {
           console.log("Error parsing channels.txt");
-          return res.status(500).json({ error: "Corrupted channel data" });
+          return res.json({ error: "Corrupted channel data" });
         }
 
         // Remove all channels associated with the group
@@ -65,14 +65,14 @@ router.post("/", (req, res) => {
         fs.writeFile(channelsFile, JSON.stringify(channels, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing channels.txt");
-            return res.status(500).json({ error: "Failed to update channels.txt" });
+            return res.json({ error: "Failed to update channels.txt" });
           }
 
           // Read users.txt
           fs.readFile(usersFile, "utf8", (err, userData) => {
             if (err) {
               console.log("Error reading users.txt");
-              return res.status(500).json({ error: "Internal server error (users)" });
+              return res.json({ error: "Internal server error (users)" });
             }
 
             let users = [];
@@ -80,7 +80,7 @@ router.post("/", (req, res) => {
               users = JSON.parse(userData);
             } catch (err) {
               console.log("Error parsing users.txt");
-              return res.status(500).json({ error: "Corrupted user data" });
+              return res.json({ error: "Corrupted user data" });
             }
 
             // Remove group from all users
@@ -100,8 +100,7 @@ router.post("/", (req, res) => {
 
               console.log(`Group ${groupIdToDelete} deleted, channels removed, and group references cleared from users.`);
               res.json({
-                success: true,
-                message: "Group, associated channels, and user references deleted successfully."
+                success: true
               });
             });
           });

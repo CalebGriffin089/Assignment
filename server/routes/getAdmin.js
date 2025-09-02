@@ -14,7 +14,7 @@ router.post("/", (req, res) => {
   fs.readFile(groupsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading groups file");
-      return res.status(500).json({ error: "Internal server error (groups)" });
+      return res.json({ error: "Internal server error (groups)" });
     }
 
     let groupsData = [];
@@ -22,29 +22,15 @@ router.post("/", (req, res) => {
       groupsData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing groups.txt");
-      return res.status(500).json({ error: "Corrupted groups data" });
+      return res.json({ error: "Corrupted groups data" });
     }
 
-    let channels = [];
-    let members = [];
     let isAdmin = false;  
     let isSuperAdmin = false; 
 
-    // Step 2: Find the group based on the given groupId
+    // Find the group based on the given groupId
     const group = groupsData.find(g => parseInt(g.id) === parseInt(groupId));
     
-    // Check if the group object exists and is not null or undefined
-  if (group !== null && group !== undefined) {
-      console.log(group);
-      channels = group.channels;
-      members = group.members;
-
-    } else {
-      members = [];
-    }
-    // Initialize isAdmin to false by default
-    isAdmin = false;
-
     // check if the user is a group admin
     if (group.admins.includes(username)) {
       isAdmin = true;
@@ -55,7 +41,7 @@ router.post("/", (req, res) => {
     fs.readFile(usersFile, "utf8", (err, userData) => {
       if (err) {
         console.log("Error reading users file");
-        return res.status(500).json({ error: "Internal server error (users)" });
+        return res.json({ error: "Internal server error (users)" });
       }
 
       let usersData = [];
@@ -63,7 +49,7 @@ router.post("/", (req, res) => {
         usersData = JSON.parse(userData);
       } catch (err) {
         console.log("Error parsing users.txt");
-        return res.status(500).json({ error: "Corrupted users data" });
+        return res.json({ error: "Corrupted users data" });
       }
 
       // check if the user has a superAdmin role
@@ -73,10 +59,7 @@ router.post("/", (req, res) => {
       }
 
         // return admin status
-        res.json({
-          isAdmin,
-          isSuperAdmin 
-        });
+        res.json({ isAdmin, isSuperAdmin });
       });
     });
   });

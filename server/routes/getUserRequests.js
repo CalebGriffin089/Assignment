@@ -11,7 +11,7 @@ router.post("/", (req, res) => {
   fs.readFile(requestsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading requests.txt");
-      return res.status(500).json({ error: "Internal server error (requests)" });
+      return res.json({ error: "Internal server error (requests)" });
     }
 
     let requests = [];
@@ -19,7 +19,7 @@ router.post("/", (req, res) => {
       requests = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing requests.txt");
-      return res.status(500).json({ error: "Corrupted requests data" });
+      return res.json({ error: "Corrupted requests data" });
     }
     // Send all requests as a response
     res.json({ requests });

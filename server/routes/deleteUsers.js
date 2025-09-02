@@ -15,7 +15,7 @@ router.post("/", (req, res) => {
   fs.readFile(usersFile, "utf8", (err, userData) => {
     if (err) {
       console.log("Error reading users.txt");
-      return res.status(500).json({ error: "Internal server error (users)" });
+      return res.json({ error: "Internal server error (users)" });
     }
 
     let users = [];
@@ -23,7 +23,7 @@ router.post("/", (req, res) => {
       users = JSON.parse(userData);
     } catch (err) {
       console.log("Error parsing users.txt");
-      return res.status(500).json({ error: "Corrupted user data" });
+      return res.json({ error: "Corrupted user data" });
     }
     // Find and remove user
     const userIndex = users.findIndex(u => u.username === usernameToDelete);
@@ -36,7 +36,7 @@ router.post("/", (req, res) => {
     fs.readFile(groupsFile, "utf8", (err, groupData) => {
       if (err) {
         console.log("Error reading groups.txt");
-        return res.status(500).json({ error: "Internal server error (groups)" });
+        return res.json({ error: "Internal server error (groups)" });
       }
 
       let groups = [];
@@ -44,7 +44,7 @@ router.post("/", (req, res) => {
         groups = JSON.parse(groupData);
       } catch (err) {
         console.log("Error parsing groups.txt");
-        return res.status(500).json({ error: "Corrupted group data" });
+        return res.json({ error: "Corrupted group data" });
       }
 
       // Remove user from any group they are in
@@ -57,14 +57,14 @@ router.post("/", (req, res) => {
       fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing users.txt");
-          return res.status(500).json({ error: "Failed to update users.txt" });
+          return res.json({ error: "Failed to update users.txt" });
         }
 
         // update groups.txt
         fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing groups.txt");
-            return res.status(500).json({ error: "Failed to update groups.txt" });
+            return res.json({ error: "Failed to update groups.txt" });
           }
 
           console.log(`User ${usernameToDelete} deleted and removed from groups`);

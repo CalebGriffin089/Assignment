@@ -8,9 +8,6 @@ const router = express.Router();
 router.post("/", (req, res) => {
   const { groupId, name, members } = req.body;
 
-  if (!groupId || !name || !members) {
-    return res.status(400).json({ error: "Missing required fields: groupId, name, members" });
-  }
   const channelData = {
     id: 0,
     groupId: groupId,  

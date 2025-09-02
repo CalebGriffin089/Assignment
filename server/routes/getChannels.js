@@ -10,11 +10,11 @@ router.post("/", (req, res) => {
   const groupsFile = path.join(__dirname, "../data/groups.txt");
   const channelsFile = path.join(__dirname, "../data/channels.txt");  // Path to channels file
 
-  // Step 1: Read the groups.txt file to get group details
+  // Read the groups.txt file to get group details
   fs.readFile(groupsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading groups file");
-      return res.status(500).json({ error: "Internal server error (groups)" });
+      return res.json({ error: "Internal server error (groups)" });
     }
 
     let groupsData = [];
@@ -22,24 +22,24 @@ router.post("/", (req, res) => {
       groupsData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing groups.txt");
-      return res.status(500).json({ error: "Corrupted groups data" });
+      return res.json({ error: "Corrupted groups data" });
     }
 
     let channels = [];
     let members = [];
 
-    // Step 2: Find the group based on the given groupId
+    // Find the group based on the given groupId
     const group = groupsData.find(g => parseInt(g.id) === parseInt(groupId));
     if (group) {
-      channels = Array.isArray(group.channels) ? group.channels : [];
-      members = Array.isArray(group.members) ? group.members : [];
+      channels = group.channels;
+      members = group.members;
     }
 
     // Step 3: Read the channels.txt file to check banned users
     fs.readFile(channelsFile, "utf8", (err, channelData) => {
       if (err) {
         console.log("Error reading channels file");
-        return res.status(500).json({ error: "Internal server error (channels)" });
+        return res.json({ error: "Internal server error (channels)" });
       }
 
       let channelsData = [];
@@ -47,7 +47,7 @@ router.post("/", (req, res) => {
         channelsData = JSON.parse(channelData);
       } catch (err) {
         console.log("Error parsing channels.txt");
-        return res.status(500).json({ error: "Corrupted channels data" });
+        return res.json({ error: "Corrupted channels data" });
       }
 
       // Step 4: Check each channel to see if the user is banned or a member
@@ -83,9 +83,9 @@ router.post("/", (req, res) => {
         }
       }
 
-      // Step 5: Return the group information along with the allowed channels and members
+      // Return the group information along with the allowed channels and members
       res.json({
-        channels: allowedChannels,  // Only return the channels the user is not banned from and is a member of
+        channels: allowedChannels,
         members
       });
     });

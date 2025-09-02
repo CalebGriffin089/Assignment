@@ -21,7 +21,7 @@ router.post("/", (req, res) => {
   fs.readFile(usersFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading users file");
-      return res.status(500).json({ error: "Internal server error (users)" });
+      return resjson({ error: "Internal server error (users)" });
     }
 
     let fileData = [];
@@ -29,7 +29,7 @@ router.post("/", (req, res) => {
       fileData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing users.txt");
-      return res.status(500).json({ error: "Corrupted users data" });
+      return res.json({ error: "Corrupted users data" });
     }
 
     // Check if username already exists
@@ -56,7 +56,7 @@ router.post("/", (req, res) => {
     fs.readFile(requestsFile, "utf8", (err, requestsData) => {
       if (err) {
         console.log("Error reading requests file");
-        return res.status(500).json({ error: "Internal server error (requests)" });
+        return res.json({ error: "Internal server error (requests)" });
       }
 
       let requests = [];
@@ -64,7 +64,7 @@ router.post("/", (req, res) => {
         requests = JSON.parse(requestsData);
       } catch (err) {
         console.log("Error parsing requests.txt");
-        return res.status(500).json({ error: "Corrupted requests data" });
+        return res.json({ error: "Corrupted requests data" });
       }
 
       //check if username is already requested
@@ -79,11 +79,11 @@ router.post("/", (req, res) => {
       fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
         if (err) {
           console.log("Error writing to requests.txt");
-          return res.status(500).json({ error: "Failed to update requests file" });
+          return res.json({ error: "Failed to update requests file" });
         }
 
         console.log("Registration request submitted:", user.username);
-        res.json({ valid: true, message: "Registration request submitted successfully" });
+        res.json({ valid: true });
       });
     });
   });

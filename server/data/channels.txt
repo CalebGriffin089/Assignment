@@ -24,5 +24,17 @@
     "members": [
       "Hi"
     ]
+  },
+  {
+    "id": 3,
+    "groupId": "1",
+    "name": "sd",
+    "admins": [
+      "Hi"
+    ],
+    "banned": [],
+    "members": [
+      "Hi"
+    ]
   }
 ]

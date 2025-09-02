@@ -21,7 +21,7 @@ router.post("/", async (req, res) => {
   await fs.readFile(groupsFile, "utf8", (err, gData) => {
     if (err) {
       console.log("Error reading groups file");
-      return res.status(500).json({ error: "Internal server error (groups)" });
+      return res.json({ error: "Internal server error (groups)" });
     }
 
     let groupFileData = [];
@@ -29,7 +29,7 @@ router.post("/", async (req, res) => {
       groupFileData = JSON.parse(gData);
     } catch (err) {
       console.log("Error parsing groups.txt");
-      return res.status(500).json({ error: "Corrupted groups data" });
+      return res.json({ error: "Corrupted groups data" });
     }
 
     //get new groupId
@@ -46,7 +46,7 @@ router.post("/", async (req, res) => {
     fs.writeFile(groupsFile, JSON.stringify(groupFileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing groups file");
-        return res.status(500).json({ error: "Failed to write groups file" });
+        return res.json({ error: "Failed to write groups file" });
       }
 
       console.log("Group registered:", groupData);
@@ -57,7 +57,7 @@ router.post("/", async (req, res) => {
   await fs.readFile(usersFile, "utf8", (err, uData) => {
     if (err) {
       console.log("Error reading users file");
-      return res.status(500).json({ error: "Internal server error (users)" });
+      return res.json({ error: "Internal server error (users)" });
     }
 
     let userFileData = [];
@@ -65,20 +65,20 @@ router.post("/", async (req, res) => {
       userFileData = JSON.parse(uData);
     } catch (err) {
       console.log("Error parsing users.txt");
-      return res.status(500).json({ error: "Corrupted users data" });
+      return res.json({ error: "Corrupted users data" });
     }
 
     // the only member should be the creator of the group so we only need to update their user profile
     const userObj = userFileData.find(u => u.username === groupData.members[0]);
     if (!userObj) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res.json({ success: false, message: "User not found" });
     }
     userObj.groups.push(groupData.id.toString());
     // save updated users
     fs.writeFile(usersFile, JSON.stringify(userFileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing users file");
-        return res.status(500).json({ error: "Failed to update users" });
+        return res.json({ error: "Failed to update users" });
       }
     });
   });
@@ -98,7 +98,7 @@ router.post("/", async (req, res) => {
     
     if (err) {
       console.log("Error reading channels file");
-      return res.status(500).json({ error: "Internal server error (channels)" });
+      return res.json({ error: "Internal server error (channels)" });
     }
 
     let fileData = [];
@@ -106,7 +106,7 @@ router.post("/", async (req, res) => {
       fileData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing channels.txt");
-      return res.status(500).json({ error: "Corrupted channels data" });
+      return res.json({ error: "Corrupted channels data" });
     }
 
     if (fileData.length === 0) {
@@ -122,7 +122,7 @@ router.post("/", async (req, res) => {
     fs.writeFile(channelsFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing channels file");
-        return res.status(500).json({ error: "Failed to write channels file" });
+        return res.json({ error: "Failed to write channels file" });
       }
       res.json({ valid: true, groupId: groupData.id });
     });

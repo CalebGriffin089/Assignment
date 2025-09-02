@@ -5,9 +5,9 @@ const path = require("path");
 const router = express.Router();
 
 router.post("/", (req, res) => {
-  const { id, currentGroup } = req.body;
+  const { id, currentChannel } = req.body;
 
-  console.log("Ban request - id:", id, "group:", currentGroup);
+  console.log("Ban request - id:", id, "group:", currentChannel);
 
   const channelsFile = path.join(__dirname, "../data/channels.txt"); 
   const usersFile = path.join(__dirname, "../data/users.txt");
@@ -15,7 +15,7 @@ router.post("/", (req, res) => {
   fs.readFile(usersFile, "utf8", (err, userData) => {
     if (err) {
       console.log("Error reading users.txt");
-      return res.status(500).json({ error: "Internal server error (users)" });
+      return res.json({ error: "Internal server error (users)" });
     }
 
     let users = [];
@@ -23,7 +23,7 @@ router.post("/", (req, res) => {
       users = JSON.parse(userData);
     } catch (err) {
       console.log("Error parsing users.txt");
-      return res.status(500).json({ error: "Corrupted users data" });
+      return res.json({ error: "Corrupted users data" });
     }
 
     // Find the user by id and remove the currentGroup id from their groups array
@@ -37,7 +37,7 @@ router.post("/", (req, res) => {
     fs.readFile(channelsFile, "utf8", (err, channelData) => {
       if (err) {
         console.log("Error reading channels.txt");
-        return res.status(500).json({ error: "Internal server error (channels)" });
+        return res.json({ error: "Internal server error (channels)" });
       }
 
       let channels = [];
@@ -45,13 +45,13 @@ router.post("/", (req, res) => {
         channels = JSON.parse(channelData);
       } catch (err) {
         console.log("Error parsing channels.txt");
-        return res.status(500).json({ error: "Corrupted channel data" });
+        return res.json({ error: "Corrupted channel data" });
       }
 
       // find the channel with the right group id
-      const channel = channels.find(ch => parseInt(ch.groupId) === parseInt(currentGroup));
+      const channel = channels.find(ch => parseInt(ch.groupId) === parseInt(currentChannel));
       if (!channel) {
-        return res.status(404).json({ success: false, message: "Channel not found for the group" });
+        return res.json({ success: false, message: "Channel not found for the group" });
       }
 
       // Remove the user from the members list if they exist
@@ -72,8 +72,8 @@ router.post("/", (req, res) => {
           return res.status(500).json({ error: "Failed to update channels" });
         }
 
-        console.log(`User ${id} banned and removed from members list in the channel of group ${currentGroup}`);
-        res.json({ success: true, message: `User ${id} banned and removed from the channel's members list of group ${currentGroup}` });
+        console.log(`User ${id} banned and removed from members list in the channel of group ${currentChannel}`);
+        res.json({ success: true });
       });
     });
   });

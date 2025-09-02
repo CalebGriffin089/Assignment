@@ -20,7 +20,7 @@ router.post("/", (req, res) => {
   fs.readFile(usersFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading users file");
-      return res.status(500).json({ error: "Internal server error (users)" });
+      return res.json({ error: "Internal server error (users)" });
     }
 
     let fileData = [];
@@ -28,7 +28,7 @@ router.post("/", (req, res) => {
       fileData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing users.txt");
-      return res.status(500).json({ error: "Corrupted users data" });
+      return res.json({ error: "Corrupted users data" });
     }
 
     // Assign new ID for the new user
@@ -45,7 +45,7 @@ router.post("/", (req, res) => {
     fs.writeFile(usersFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing users file");
-        return res.status(500).json({ error: "Failed to write users file" });
+        return res.json({ error: "Failed to write users file" });
       }
 
       console.log("User registered:", user.username);
@@ -54,7 +54,7 @@ router.post("/", (req, res) => {
       fs.readFile(requestsFile, "utf8", (err, requestsData) => {
         if (err) {
           console.log("Error reading requests file");
-          return res.status(500).json({ error: "Internal server error (requests)" });
+          return res.json({ error: "Internal server error (requests)" });
         }
 
         let requests = [];
@@ -62,7 +62,7 @@ router.post("/", (req, res) => {
           requests = JSON.parse(requestsData);
         } catch (err) {
           console.log("Error parsing requests.txt");
-          return res.status(500).json({ error: "Corrupted requests data" });
+          return res.json({ error: "Corrupted requests data" });
         }
 
         // Find the request for the user and remove it
@@ -70,7 +70,7 @@ router.post("/", (req, res) => {
 
         if (requestIndex === -1) {
           console.log("Request not found for user:", user.username);
-          return res.status(404).json({ error: "Request not found" });
+          return res.json({ error: "Request not found" });
         }
 
         // Remove the user request
@@ -80,7 +80,7 @@ router.post("/", (req, res) => {
         fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
           if (err) {
             console.log("Error writing to requests.txt");
-            return res.status(500).json({ error: "Failed to update requests file" });
+            return res.json({ error: "Failed to update requests file" });
           }
           console.log("User removed from requests list:", user.username);
           res.json({ valid: true, userId: user.id });

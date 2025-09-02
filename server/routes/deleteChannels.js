@@ -8,9 +8,6 @@ router.post("/", (req, res) => {
   const groupId = req.body.groupId;
   const channelToDelete = req.body.channel;
   
-  if (!channelToDelete) {
-    return res.status(400).json({ error: "No channel specified" });
-  }
 
   const groupsFile = path.join(__dirname, "../data/groups.txt");
 
@@ -18,7 +15,7 @@ router.post("/", (req, res) => {
   fs.readFile(groupsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading groups file");
-      return res.status(500).json({ error: "Internal server error (groups)" });
+      return res.json({ error: "Internal server error (groups)" });
     }
 
     let groupsData = [];
@@ -26,12 +23,12 @@ router.post("/", (req, res) => {
       groupsData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing groups.txt");
-      return res.status(500).json({ error: "Corrupted groups data" });
+      return res.json({ error: "Corrupted groups data" });
     }
 
     const group = groupsData.find(g => parseInt(g.id) === parseInt(groupId));
     if (!group) {
-      return res.status(404).json({ error: "Group not found" });
+      return res.json({ error: "Group not found" });
     }
 
     // Remove the channel
@@ -41,16 +38,12 @@ router.post("/", (req, res) => {
     fs.writeFile(groupsFile, JSON.stringify(groupsData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing groups file");
-        return res.status(500).json({ error: "Failed to update groups" });
+        return res.json({ error: "Failed to update groups" });
       }
 
       console.log(`Deleted channel "${channelToDelete}" from group ${groupId}`);
     });
   });
-
-  if (!channelToDelete) {
-    return res.status(400).json({ error: "Channel ID is required" });
-  }
 
   const channelsFile = path.join(__dirname, "../data/channels.txt");
 
@@ -58,7 +51,7 @@ router.post("/", (req, res) => {
   fs.readFile(channelsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading channels file");
-      return res.status(500).json({ error: "Internal server error (channels)" });
+      return res.json({ error: "Internal server error (channels)" });
     }
 
     let fileData = [];
@@ -66,13 +59,13 @@ router.post("/", (req, res) => {
       fileData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing channels.txt");
-      return res.status(500).json({ error: "Corrupted channels data" });
+      return res.json({ error: "Corrupted channels data" });
     }
 
     const channelIndex = fileData.findIndex(channel => channel.name == channelToDelete);
 
     if (channelIndex === -1) {
-      return res.status(404).json({ error: "Channel not found" });
+      return res.json({ error: "Channel not found" });
     }
 
     // remove the channel from the array
@@ -82,7 +75,7 @@ router.post("/", (req, res) => {
     fs.writeFile(channelsFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing channels file");
-        return res.status(500).json({ error: "Failed to write channels file" });
+        return res.json({ error: "Failed to write channels file" });
       }
 
       console.log("Channel deleted:", deletedChannel);

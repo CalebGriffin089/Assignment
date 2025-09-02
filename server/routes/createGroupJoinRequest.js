@@ -18,55 +18,39 @@ router.post("/", (req, res) => {
     need: "Join Permission"
   };
 
-  //read users file
-  fs.readFile(usersFile, "utf8", (err, data) => {
+  // Read the requests file
+  fs.readFile(requestsFile, "utf8", (err, requestsData) => {
     if (err) {
-      console.log("Error reading users file");
-      return res.status(500).json({ error: "Internal server error (users)" });
+      console.log("Error reading requests file");
+      return res.json({ error: "Internal server error (requests)" });
     }
 
-    let fileData = [];
+    let requests = [];
     try {
-      fileData = JSON.parse(data);
+      requests = JSON.parse(requestsData);
     } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.status(500).json({ error: "Corrupted users data" });
+      console.log("Error parsing requests.txt");
+      return res.json({ error: "Corrupted requests data" });
     }
 
-    // Read the requests file
-    fs.readFile(requestsFile, "utf8", (err, requestsData) => {
+    // Check if there's already a pending request for this user to join the group
+    const existingRequest = requests.find(r => r.username === user.username && r.groupId === user.groupId);
+    if (existingRequest) {
+      return res.json({ valid: false });
+    }
+
+    requests.push(user);
+
+    // updated the requests file
+    fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
       if (err) {
-        console.log("Error reading requests file");
-        return res.status(500).json({ error: "Internal server error (requests)" });
+        console.log("Error writing to requests.txt");
+        return res.json({ error: "Failed to update requests file" });
       }
 
-      let requests = [];
-      try {
-        requests = JSON.parse(requestsData);
-      } catch (err) {
-        console.log("Error parsing requests.txt");
-        return res.status(500).json({ error: "Corrupted requests data" });
-      }
-
-      // Check if there's already a pending request for this user to join the group
-      const existingRequest = requests.find(r => r.username === user.username && r.groupId === user.groupId);
-      if (existingRequest) {
-        return res.json({ valid: false });
-      }
-
-      requests.push(user);
-
-      // updated the requests file
-      fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
-        if (err) {
-          console.log("Error writing to requests.txt");
-          return res.status(500).json({ error: "Failed to update requests file" });
-        }
-
-        // Respond with the request status
-        console.log("Join group request submitted:", user.username, "for group:", user.groupId);
-        res.json({ valid: true });
-      });
+      // Respond with the request status
+      console.log("Join group request submitted:", user.username, "for group:", user.groupId);
+      res.json({ valid: true });
     });
   });
 });

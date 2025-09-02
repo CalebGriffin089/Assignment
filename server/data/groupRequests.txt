@@ -5,5 +5,12 @@
     "status": "pending",
     "permission": "user",
     "need": "Join Permission"
+  },
+  {
+    "username": "Hi",
+    "groupId": "1",
+    "status": "pending",
+    "permission": "user",
+    "need": "Join Permission"
   }
 ]

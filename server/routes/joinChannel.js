@@ -16,7 +16,7 @@ router.post("/", (req, res) => {
   fs.readFile(channelsFile, "utf8", (err, data) => {
     if (err) {
       console.log("Error reading channels file");
-      return res.status(500).json({ error: "Internal server error (channels)" });
+      return res.json({ error: "Internal server error (channels)" });
     }
 
     let channelsData = [];
@@ -24,21 +24,20 @@ router.post("/", (req, res) => {
       channelsData = JSON.parse(data);
     } catch (err) {
       console.log("Error parsing channels.txt");
-      return res.status(500).json({ error: "Corrupted channels data" });
+      return res.json({ error: "Corrupted channels data" });
     }
 
     // Find the channel by name
     const channel = channelsData.find(ch => ch.name === user.newChannel);
     if (!channel) {
-      return res.status(404).json({ success: false, message: "Channel not found" });
+      return res.json({ valid: false });
     }
 
     // Check if the user is banned from the channel
     if (channel.banned.includes(user.username)) {
       console.log('User' + user.username + 'is banned from channel' + user.newChannel);
-      return res.status(403).json({
-        success: false,
-        message: 'User' + user.username + 'is banned from this channel',
+      return res.json({
+        valid: false,
       });
     }
 
@@ -51,7 +50,7 @@ router.post("/", (req, res) => {
     fs.writeFile(channelsFile, JSON.stringify(channelsData, null, 2), "utf8", (err) => {
       if (err) {
         console.log("Error writing to channels file");
-        return res.status(500).json({ error: "Failed to update channels" });
+        return res.json({ error: "Failed to update channels" });
       }
 
       // Return success response

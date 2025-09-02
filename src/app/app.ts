@@ -11,8 +11,8 @@ export class App {
   constructor(private router: Router) {}
   isSuperAdmin =true;
   logout() {
-    localStorage.clear();           // Clear localStorage
-    this.router.navigate(['/']); // Navigate to login page
+    localStorage.clear(); 
+    this.router.navigate(['/']); 
   }
 }
 
