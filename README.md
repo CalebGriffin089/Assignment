@@ -902,43 +902,36 @@ Return Values:
     - Write the updates to both files.
 
 
-
-
-
-
-
-
-
-Angular Architecture:
-Components Directory (/app/components):
+# Angular Architecture:
+## Components Directory (/app/components):
 •	/chat/
-o	chat.html: The HTML template for the chat component
-o	chat.ts: the typescript file for the logic and behaviour of the chat component
+    o	chat.html: The HTML template for the chat component
+    o	chat.ts: the typescript file for the logic and behaviour of the chat component
 •	/create/
-o	create.html: The HTML template for the Create component.
-o	create.ts: the typescript file for the logic of the create component
+    o	create.html: The HTML template for the Create component.
+    o	create.ts: the typescript file for the logic of the create component
 •	/createGroups/
-o	createGroups.html: The HTML template for the createGroups component.
-o	createGroups.ts: the typescript file for the logic of the create component
+    o	createGroups.html: The HTML template for the createGroups component.
+    o	createGroups.ts: the typescript file for the logic of the create component
 •	/deleteUser/
-o	deleteUser.html: The HTML template for the deleteUser component.
-o	deleteUser.ts: the typescript file for the logic of the deleteUser component
+    o	deleteUser.html: The HTML template for the deleteUser component.
+    o	deleteUser.ts: the typescript file for the logic of the deleteUser component
 •	/joinGrous/
-o	joinGrous.html: The HTML template for the joinGrous component.
-o	joinGrous.ts: the typescript file for the logic of the joinGrous component
+    o	joinGrous.html: The HTML template for the joinGrous component.
+    o	joinGrous.ts: the typescript file for the logic of the joinGrous component
 •	/login/
-o	login.html: The HTML template for the login component.
-o	login.ts: the typescript file for the logic of the login component
+    o	login.html: The HTML template for the login component.
+    o	login.ts: the typescript file for the logic of the login component
 •	/requests/
-o	requests.html: The HTML template for the requests component.
-o	requests.ts: the typescript file for the logic of the requests component
+    o	requests.html: The HTML template for the requests component.
+    o	requests.ts: the typescript file for the logic of the requests component
 Services Directory (/services)
 •	/sockets/
-o	sockets.spec.ts
-o	sockets.ts
-Main Module File:
-app-module.ts: the root module where components and services are declared and imported 
-app-routing-module.ts: defines all the routes to navigate to each component
-app.ts: the typescript file for app.html
-app.html: the main html file where everything is displayed
+    o	sockets.spec.ts
+    o	sockets.ts
+## Main Module File:
+    - app-module.ts: the root module where components and services are declared and imported 
+    - app-routing-module.ts: defines all the routes to navigate to each component
+    - app.ts: the typescript file for app.html
+    - app.html: the main html file where everything is displayed
 
