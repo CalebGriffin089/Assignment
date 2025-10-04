@@ -86,13 +86,11 @@
       <div *ngIf="channels.length > 0" class="mb-4">
         <label class="fw-bold mb-2">Channels:</label>
         <div class="d-flex flex-wrap gap-2">
-          <button *ngFor="let msg of channels; let i = index" 
-                  class="btn btn-outline-secondary" 
-                  (click)="selectChannel(msg)">
-            {{ msg }}
+          <button *ngFor="let channel of channels" (click)="selectChannel(channel)">
+            {{ channel.name }}
           </button>
         </div>
-        <p class="mt-2"><strong>Current Channel:</strong> {{ selectedChannel }}</p>
+        <p class="mt-2"><strong>Current Channel:</strong> {{ selectedChannel?.name }}</p>
       </div>
 
       <!-- Members -->
@@ -142,7 +140,7 @@
         <!-- Delete Channel -->
         <div class="mb-3">
           <label class="fw-bold mb-2">Delete Channel:</label><br>
-          <button class="btn btn-danger" (click)="deleteChannel()">{{selectedChannel}}</button>
+          <button class="btn btn-danger" (click)="deleteChannel()">{{ selectedChannel?.name }}</button>
         </div>
 
         <!-- Ban User from Channel -->

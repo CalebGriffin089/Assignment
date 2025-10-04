@@ -19,11 +19,10 @@ router.post("/", async (req, res) => {
     
     try {
         // Step 1: Fetch the last 5 messages from the database for the specific channel and group
-        const messages = await messagesCollection.find({ channel: String(channel), group: String(group) })
+        const messages = await messagesCollection.find({ channel: channel._id, group: String(group) })
             .sort({ timeStamp: -1 }) // Sort by timestamp (newest first)
             .limit(5)
             .toArray();
-        console.log(messages)
         // Step 2: Extract unique userIds from the messages to query the users collection
         const userIds = [...new Set(messages.map(message => message.username))];  // Assuming `userId` is the identifier
 

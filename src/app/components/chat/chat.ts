@@ -53,7 +53,7 @@ export class Chat{
   isLoading = true;
   //have groups, channels, members, and requestsGroups, selectedMember so they can be bound in html and displayed
   groups = []
-  channels = [];
+  channels: { _id: string; name: string }[] = [];
   members = [];
   requestsGroups: any[] = [];
   selectedMember = '';
@@ -115,11 +115,14 @@ export class Chat{
 
   selectChannel(selectedChannel: any) {
     let username = localStorage.getItem('username') || '' 
-    this.socketService.leaveRoom(this.selectedChannel, username)
+    let oldChannel = this.selectedChannel;
     this.selectedChannel = selectedChannel
     // have the socket join the selectedChannel
-    this.socketService.joinRoom(selectedChannel, username);
-
+    this.socketService.joinRoom(selectedChannel._id, username);
+    if(oldChannel != null){
+      this.socketService.leaveRoom(oldChannel._id, username);
+    }
+    
     this.httpService.post(`${this.server}/api/getMessages`, {channel: selectedChannel, group: this.currentGroup}).pipe(
       map((response: any) => {
         const messages: Message[] = response.map((res: Raw_Message) => ({
@@ -128,8 +131,7 @@ export class Chat{
           username: res.username,
           profileImage: res.profileImage || '',
         }));
-        console.log(messages)
-        this.messageIn.update((currentMessages: Message[]) => [...messages.reverse(), ...currentMessages]);
+        this.messageIn.update((currentMessages: Message[]) => [...messages.reverse()]);
       }),
       catchError((error) => {
         console.error('Error during login:', error);
@@ -166,7 +168,7 @@ export class Chat{
     this.messageOut.set(currentMessage);
 
     let username = localStorage.getItem('username') || 'null';
-    this.socketService.sendMessage(this.messageOut(), this.selectedChannel, this.currentGroup);
+    this.socketService.sendMessage(this.messageOut(), this.selectedChannel._id, this.currentGroup);
     this.messageOut.set({
       msg: '',
       image: '',
@@ -179,22 +181,25 @@ export class Chat{
     fileInput.value = ''; // Reset file input field
   }
 
-  getChannels(selectedGroup: any){
-    //get the channels for a group
-     this.httpService.post(`${this.server}/api/getChannels`, {groupId: selectedGroup, username: localStorage.getItem('username')}).pipe(
-      map((response: any) => {
-        // Check if response is valid
-        this.channels = response.channels;
-        this.members = response.members;
-        localStorage.setItem('channels', response.channels);
-        localStorage.setItem('members', response.members);
-      }),
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
-  }
+  getChannels(selectedGroup: any) {
+  this.httpService.post(`${this.server}/api/getChannels`, {
+    groupId: selectedGroup,
+    username: localStorage.getItem('username')
+  }).pipe(
+    map((response: any) => {
+      this.channels = response.channels;  // array of objects with _id and name
+      this.members = response.members
+
+      // Save only the channel names or IDs if you want strings in localStorage
+      localStorage.setItem('channels', JSON.stringify(response.channels)); 
+      localStorage.setItem('members', JSON.stringify(response.members));
+    }),
+    catchError((error) => {
+      console.error('Error during login:', error);
+      return of(null);
+    })
+  ).subscribe();
+}
 
   //checks if the user is an admin in the current group
   checkAdmin(selectedGroup: any){
@@ -317,11 +322,11 @@ export class Chat{
         return of(null);  // Return null if there is an error
       })
     ).subscribe();
+    window.location.reload();
   }
 
   //ban the a member from the selected channel
   banUserChannel(){
-    console.log(this.currentGroup)
     this.httpService.post(`${this.server}/api/banUserChannel`, {currentGroup: this.currentGroup, user: this.selectedMember}).pipe(
       catchError((error) => {
         console.error('Error during login:', error);
@@ -397,7 +402,6 @@ export class Chat{
   onUpload(): void {
     const fd = new FormData();
     this.isLoading = true;  // Set loading state to true when uploading starts
-    console.log(this.messageOut)
 
     if (this.selectedfile != null) {
       fd.append('image', this.selectedfile, this.selectedfile.name);

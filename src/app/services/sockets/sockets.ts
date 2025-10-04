@@ -47,15 +47,15 @@ export class Sockets {
   }
 
   joinRoom(rooms:string, username:string){
-     this.socket.emit('joinRoom', rooms);
-     console.log(rooms);
-     const msg: Message = {
-        msg: `${username} has joined the room.`,
-        image: 'http://localhost:3000/userImages/',
-        username: 'Server',
-        profileImage: 'http://localhost:3000/userImages/profile.jpg'
-      };
-     this.socket.emit("message", msg, rooms)
+      const msg: Message = {
+          msg: `${username} has joined the room.`,
+          image: 'http://localhost:3000/userImages/',
+          username: 'Server',
+          profileImage: 'http://localhost:3000/userImages/profile.jpg'
+        };
+      this.socket.emit("message", msg, rooms)
+
+     this.socket.emit('joinRoom', rooms);  
      
   }
 

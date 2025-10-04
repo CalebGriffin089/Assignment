@@ -17,7 +17,6 @@ router.post("/", async (req, res) => {
         // Connect to MongoDB
         await client.connect();
         console.log("Connected to MongoDB");
-
         const db = client.db(dbName);
         const messagesCollection = db.collection("messages");
 

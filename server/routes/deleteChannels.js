@@ -23,18 +23,16 @@ router.post("/", async (req, res) => {
     const groupsCollection = db.collection("groups");
     const groupResult = await groupsCollection.findOneAndUpdate(
       { id: parseInt(groupId) },
-      { $pull: { channels: channel } },
+      { $pull: { channels: channel.name } },
       { returnDocument: "after" }
     );
 
-    // if (!groupResult.value) {
-    //   return res.status(404).json({ error: "Group not found" });
-    // }
     
     // 2. Delete the channel document from channels collection
     const channelsCollection = db.collection("channels");
-    const deleteResult = await channelsCollection.deleteMany({ name: channel, groupId: String(groupId) });
+    const deleteResult = await channelsCollection.deleteOne({ _id: new ObjectId(channel._id) });
     if (deleteResult.deletedCount === 0) {
+      
       return res.status(404).json({ error: "Channel not found" });
     }
 

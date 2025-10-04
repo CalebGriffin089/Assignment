@@ -37,16 +37,18 @@ router.post("/", async (req, res) => {
       .find({ name: { $in: groupChannels }, groupId: String(groupId) })
       .toArray();
 
-    // Step 3: Filter channels where user is allowed
+    // Step 3: Filter channels where user is allowed, map to {_id, name}
     const allowedChannels = channels
       .filter(channel => {
         const isBanned = channel.banned && Array.isArray(channel.banned) && channel.banned.includes(username);
         const isMember = channel.members && Array.isArray(channel.members) && channel.members.includes(username);
         return isMember && !isBanned;
       })
-      .map(channel => channel.name);
+      .map(channel => ({
+        _id: channel._id,
+        name: channel.name
+      }));
 
-      console.log(allowedChannels);
     // Step 4: Return the group information, allowed channels, and members
     res.json({
       channels: allowedChannels,
