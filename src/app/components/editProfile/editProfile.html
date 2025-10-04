@@ -1,0 +1,16 @@
+<!--The content below is only a placeholder and can be replaced.-->
+<div class="container">
+  <h1> File Upload</h1>
+  <form>
+    <div class="form-group">
+  <input type="file" class="form-control" (change)="onFileSelected($event)" name="uploadfile" id = "uploadfile" />
+  
+  </div>
+  <button class="btn btn-primary" type="button" (click) ="onUpload()">Submit</button>
+  </form>
+  
+  <img src="http://localhost:3000\userImages\{{imagepath}} "/>
+
+
+  <button class="btn btn-primary" type="button" (click) ="updateProfile()">Update</button>
+</div>

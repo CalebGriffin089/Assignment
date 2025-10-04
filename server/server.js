@@ -59,6 +59,7 @@
   app.use("/api/upload", require("./routes/uploadImage.js"));
   app.use("/api/saveMessage", require("./routes/saveMessage.js"));
   app.use("/api/getMessages", require("./routes/getMessages.js"));
+  app.use("/api/editProfile", require("./routes/editProfile.js"));
   // API endpoint
   
 

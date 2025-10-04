@@ -8,6 +8,7 @@ import { JoinGroups } from './components/joinGroups/joinGroups';
 import { CreateGroup } from './components/createGroups/createGroups';
 import { DeleteUser } from './components/deleteUser/deleteUser';
 import { Requests } from './components/requests/requests';
+import { EditProfile } from './components/editProfile/editProfile';
 const routes: Routes = [
   {
     path: '',
@@ -43,6 +44,11 @@ const routes: Routes = [
     path: 'requests',
     component: Requests, 
     title:"requests"
+  },
+  {
+    path: 'editProfile',
+    component: EditProfile, 
+    title:"editProfile"
   },
 ];
 
