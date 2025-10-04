@@ -1,9 +1,30 @@
 import { HttpClient } from '@angular/common/http';
-import { Component, inject, signal } from '@angular/core';
+import { Component, CSP_NONCE, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map } from 'rxjs/operators';
 import { of } from 'rxjs';
 import { Sockets } from '../../services/sockets/sockets';
+import { ImguploadService } from '../../services/imgupload.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+
+interface Message {
+  msg: string,
+  image: string,
+  username: string,
+  profileImage: string
+}
+
+interface Raw_Message {
+  _id: string;
+  username: string;
+  msg: string;
+  channel: string;
+  group: string;
+  profileImage: string;
+  timeStamp: string;
+  image?: string;
+}
+
 
 @Component({
   selector: 'chat',
@@ -12,14 +33,24 @@ import { Sockets } from '../../services/sockets/sockets';
 })
 
 export class Chat{
-  constructor(private router: Router, private httpService: HttpClient) {}
+  constructor(private router: Router, private httpService: HttpClient, private imguploadService:ImguploadService, private sanitizer: DomSanitizer) {}
   server = 'http://localhost:3000';
   private socketService = inject(Sockets)
-  messageOut = signal("");
-  messageIn = signal<string[]>([]);
-  
+  messageOut = signal<Message>({
+    msg: '',           // Initial message content (empty string by default)
+    image: '',
+    username: localStorage.getItem('username') || 'null',      // Initial username (empty string by default)
+    profileImage: localStorage.getItem('profile') || 'null',  // Initial profile image (empty string by default)
+  });
+
+  messageIn = signal<Message[]>([]);
   currentGroup = '';
   selectedChannel: any = null;
+
+  title = 'imageupload';
+  selectedfile:any = null;
+  imagepath="";
+  isLoading = true;
   //have groups, channels, members, and requestsGroups, selectedMember so they can be bound in html and displayed
   groups = []
   channels = [];
@@ -65,20 +96,92 @@ export class Chat{
     );
   }
 
+  setMessageOut(msg:string){
+    let currentMessage = this.messageOut() 
+    currentMessage.msg = msg
+    this.messageOut.set(currentMessage) 
+  }
+
+ get messageOutMsg(): string {
+    return this.messageOut().msg; // Access msg property from the signal
+  }
+
+  set messageOutMsg(msg: string) {
+    this.setMessageOut(msg); // Use the setMessageOut function to update the signal
+  }
+
+  
+
+
   selectChannel(selectedChannel: any) {
+    let username = localStorage.getItem('username') || '' 
+    this.socketService.leaveRoom(this.selectedChannel, username)
     this.selectedChannel = selectedChannel
     // have the socket join the selectedChannel
-    this.socketService.joinRoom(selectedChannel);
+    this.socketService.joinRoom(selectedChannel, username);
+
+    this.httpService.post(`${this.server}/api/getMessages`, {channel: selectedChannel, group: this.currentGroup}).pipe(
+      map((response: any) => {
+        const messages: Message[] = response.map((res: Raw_Message) => ({
+          msg: res.msg,
+          image: res.image || '',
+          username: res.username,
+          profileImage: res.profileImage || '',
+        }));
+        console.log(messages)
+        this.messageIn.update((currentMessages: Message[]) => [...messages.reverse(), ...currentMessages]);
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+
+
+  }
+
+  hasImage(url: string){
+    let urlSplit = url.split("http://localhost:3000/userImages/")
+    if(urlSplit[1] == ''){
+      return false
+    }else{
+      return true
+    }
+  }
+
+  splitMsg(msg:any, pos:any){
+    let msgSplit = msg.split('http://localhost:3000/userImages/');
+    return msgSplit[pos]
+  }
+
+  getSanitizedUrl(url: string): SafeUrl {
+    let urlSplit = url.split("http://localhost:3000/userImages/")
+    return this.sanitizer.bypassSecurityTrustUrl('http://localhost:3000/userImages/' + urlSplit[1]);
   }
 
   send(){
-    this.socketService.sendMessage(this.messageOut(), this.selectedChannel);
-    this.messageOut.set('');
+    const imageUrl = "http://localhost:3000/userImages/" + encodeURIComponent(this.imagepath);
+    const currentMessage = this.messageOut();
+    currentMessage.image = imageUrl;
+    this.messageOut.set(currentMessage);
+
+    let username = localStorage.getItem('username') || 'null';
+    this.socketService.sendMessage(this.messageOut(), this.selectedChannel, this.currentGroup);
+    this.messageOut.set({
+      msg: '',
+      image: '',
+      username: localStorage.getItem('username') || 'null',
+      profileImage: localStorage.getItem('profile') || 'null'
+    });
+    this.imagepath = '';
+    this.selectedfile = null;
+    const fileInput = document.getElementById('uploadfile') as HTMLInputElement;
+    fileInput.value = ''; // Reset file input field
   }
 
   getChannels(selectedGroup: any){
     //get the channels for a group
-     this.httpService.post(`${this.server}/api/getChannels`, {id: selectedGroup, username: localStorage.getItem('username')}).pipe(
+     this.httpService.post(`${this.server}/api/getChannels`, {groupId: selectedGroup, username: localStorage.getItem('username')}).pipe(
       map((response: any) => {
         // Check if response is valid
         this.channels = response.channels;
@@ -143,6 +246,8 @@ export class Chat{
       this.getGroupRequests();
     }
 
+    
+
 
   }
   
@@ -154,11 +259,6 @@ export class Chat{
   banUser(){
     this.httpService.post(`${this.server}/api/ban`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
     map((response: any) => {
-        // Check if response is valid
-        this.channels = response.channels;
-        this.members = response.members;
-        localStorage.setItem('channels', response.channels);
-        localStorage.setItem('members', response.members);
       }),
       catchError((error) => {
         console.error('Error during login:', error);
@@ -169,7 +269,7 @@ export class Chat{
 
   
   leaveGroup(){
-    this.httpService.post(`${this.server}/api/leaveGroup`, {id: localStorage.getItem('username'), currentGroup: this.currentGroup}).pipe(
+    this.httpService.post(`${this.server}/api/leaveGroup`, {name: localStorage.getItem('username'), currentGroup: this.currentGroup}).pipe(
       catchError((error) => {
         console.error('Error during login:', error);
         return of(null);  // Return null if there is an error
@@ -190,12 +290,7 @@ export class Chat{
 
   addChannel(newChannel:string){
     //update the group text file
-    this.httpService.post(`${this.server}/api/addChannel`, {groupId: this.currentGroup, newChannels: newChannel}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
+    
 
     //update the channel text file
     this.httpService.post(`${this.server}/api/createChannel`, {groupId: this.currentGroup, name: newChannel, members: localStorage.getItem("username")}).pipe(
@@ -205,7 +300,14 @@ export class Chat{
       })
     ).subscribe();
 
-    // window.location.reload();
+    this.httpService.post(`${this.server}/api/addChannel`, {groupId: this.currentGroup, newChannels: newChannel, username: localStorage.getItem("username")}).pipe(
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);  // Return null if there is an error
+      })
+    ).subscribe();
+
+    window.location.reload();
   }
 
   deleteChannel(){
@@ -219,7 +321,8 @@ export class Chat{
 
   //ban the a member from the selected channel
   banUserChannel(){
-    this.httpService.post(`${this.server}/api/banUserChannel`, {currentGroup: this.currentGroup, id: this.selectedMember}).pipe(
+    console.log(this.currentGroup)
+    this.httpService.post(`${this.server}/api/banUserChannel`, {currentGroup: this.currentGroup, user: this.selectedMember}).pipe(
       catchError((error) => {
         console.error('Error during login:', error);
         return of(null);  // Return null if there is an error
@@ -288,6 +391,36 @@ export class Chat{
     ).subscribe(() => {});
     window.location.reload();
   }
+  onFileSelected(event:any){
+    this.selectedfile = event.target.files[0];
+  }
+  onUpload(): void {
+    const fd = new FormData();
+    this.isLoading = true;  // Set loading state to true when uploading starts
+    console.log(this.messageOut)
 
+    if (this.selectedfile != null) {
+      fd.append('image', this.selectedfile, this.selectedfile.name);
+      
+      // Upload the image
+      this.imguploadService.imgupload(fd).subscribe(
+        res => {
+          this.isLoading = false;  // Set loading state to false when upload finishes
+          this.imagepath = res.data.filename;
+          console.log('Image uploaded successfully', res);
+
+          // After upload, send the message
+          this.send();
+        },
+        error => {
+          this.isLoading = false;  // Reset loading state if upload fails
+          console.error('Image upload failed', error);
+          alert('Error uploading image. Please try again.');
+        }
+      );
+    } else {
+      this.isLoading = false;  // Reset loading state if no file is selected
+      this.send();  // Send the message without image if no file selected
+    }
+  }
 }
-

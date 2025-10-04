@@ -31,6 +31,7 @@ export class Login {
             localStorage.setItem("roles", response.roles);
             localStorage.setItem("groups", response.groups);
             localStorage.setItem("valid", response.valid);
+            localStorage.setItem("profile", response.profile);
             this.router.navigate(['/chat']);  // go to the chat page
 
           } else {

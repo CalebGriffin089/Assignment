@@ -1,93 +1,59 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
 const router = express.Router();
+const { MongoClient } = require("mongodb");
 
-const usersFile = path.join(__dirname, "../data/users.txt");
-const requestsFile = path.join(__dirname, "../data/accountRequests.txt");
+const url = "mongodb://localhost:27017";
+const client = new MongoClient(url);
+const dbName = "mydb";
 
-router.post("/", (req, res) => {
-  const user = {
-    id: null,
-    username: req.body.username,
-    email: req.body.email,
-    password: req.body.password,
+router.post("/", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  const newUser = {
+    username,
+    profile: 'http://localhost:3000/userImages/profile.jpg',
+    email,
+    password,  // Consider hashing the password before storing it
     groups: [],
-    roles: ["user"]
+    roles: ["user"],
   };
 
-  fs.readFile(usersFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading users file");
-      return res.json({ error: "Internal server error (users)" });
+  try {
+    await client.connect();
+    console.log("Connected to the server");
+
+    const db = client.db(dbName);
+    const userCollection = db.collection("users");
+    const requestsCollection = db.collection("accountRequests");
+
+    // Check if the user already exists
+    const existingUser = await userCollection.findOne({ username });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: "User already exists" });
     }
 
-    let fileData = [];
-    try {
-      fileData = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.json({ error: "Corrupted users data" });
-    }
+    // Check if there's an existing request from the user
+    const existingRequest = await requestsCollection.findOne({ username });
+    if (existingRequest) {
+      // Delete the old request
+      await requestsCollection.deleteOne({ username });
 
-    // Assign new ID for the new user
-    if (fileData.length === 0) {
-      user.id = 1;
+      // Insert the new user into the users collection
+      const result = await userCollection.insertOne(newUser);
+      console.log("User created:", result);
+
+      return res.json({ success: true, message: "User successfully registered", userId: result.insertedId });
     } else {
-      const lastId = parseInt(fileData[fileData.length - 1].id) || 0;
-      user.id = lastId + 1;
+      console.log("No request found for this username.");
+      return res.status(404).json({ success: false, message: "No account request found for this user" });
     }
 
-    fileData.push(user);
-
-    // update users file
-    fs.writeFile(usersFile, JSON.stringify(fileData, null, 2), "utf8", (err) => {
-      if (err) {
-        console.log("Error writing users file");
-        return res.json({ error: "Failed to write users file" });
-      }
-
-      console.log("User registered:", user.username);
-
-      // After adding the user remove them from the requests file
-      fs.readFile(requestsFile, "utf8", (err, requestsData) => {
-        if (err) {
-          console.log("Error reading requests file");
-          return res.json({ error: "Internal server error (requests)" });
-        }
-
-        let requests = [];
-        try {
-          requests = JSON.parse(requestsData);
-        } catch (err) {
-          console.log("Error parsing requests.txt");
-          return res.json({ error: "Corrupted requests data" });
-        }
-
-        // Find the request for the user and remove it
-        const requestIndex = requests.findIndex(r => r.username === user.username);
-
-        if (requestIndex === -1) {
-          console.log("Request not found for user:", user.username);
-          return res.json({ error: "Request not found" });
-        }
-
-        // Remove the user request
-        requests.splice(requestIndex, 1);
-
-        // update the request file
-        fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
-          if (err) {
-            console.log("Error writing to requests.txt");
-            return res.json({ error: "Failed to update requests file" });
-          }
-          console.log("User removed from requests list:", user.username);
-          res.json({ valid: true, userId: user.id });
-        });
-      });
-    });
-  });
+  } catch (err) {
+    console.error("Error handling user registration:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

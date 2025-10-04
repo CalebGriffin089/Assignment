@@ -1,67 +1,51 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-  const groupId = req.body.id;
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
+
+router.post("/", async (req, res) => {
+  const groupId = parseInt(req.body.id);
   const username = req.body.username;
-  const groupsFile = path.join(__dirname, "../data/groups.txt");
-  const usersFile = path.join(__dirname, "../data/users.txt"); 
 
-  // read the groups.txt file
-  fs.readFile(groupsFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading groups file");
-      return res.json({ error: "Internal server error (groups)" });
-    }
+  if (!groupId || !username) {
+    return res.status(400).json({ error: "Missing groupId or username" });
+  }
 
-    let groupsData = [];
-    try {
-      groupsData = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing groups.txt");
-      return res.json({ error: "Corrupted groups data" });
-    }
+  const client = new MongoClient(url);
 
-    let isAdmin = false;  
-    let isSuperAdmin = false; 
+  try {
+    await client.connect();
+    const db = client.db(dbName);
 
-    // Find the group based on the given groupId
-    const group = groupsData.find(g => parseInt(g.id) === parseInt(groupId));
-    
-    // check if the user is a group admin
-    if (group.admins.includes(username)) {
+    const groupsCollection = db.collection("groups");
+    const usersCollection = db.collection("users");
+
+    let isAdmin = false;
+    let isSuperAdmin = false;
+
+    // Find group and check if user is an admin
+    const group = await groupsCollection.findOne({ id: groupId });
+    if (group && Array.isArray(group.admins) && group.admins.includes(username)) {
       isAdmin = true;
     }
 
+    // Find user and check if they are a superAdmin
+    const user = await usersCollection.findOne({ username });
+    if (user && Array.isArray(user.roles) && user.roles.includes("superAdmin")) {
+      isSuperAdmin = true;
+    }
 
-    // read the users.txt
-    fs.readFile(usersFile, "utf8", (err, userData) => {
-      if (err) {
-        console.log("Error reading users file");
-        return res.json({ error: "Internal server error (users)" });
-      }
+    res.json({ isAdmin, isSuperAdmin });
 
-      let usersData = [];
-      try {
-        usersData = JSON.parse(userData);
-      } catch (err) {
-        console.log("Error parsing users.txt");
-        return res.json({ error: "Corrupted users data" });
-      }
-
-      // check if the user has a superAdmin role
-      const user = usersData.find(u => u.username === username);
-      if (user && user.roles.includes("superAdmin")) {
-        isSuperAdmin = true;
-      }
-
-        // return admin status
-        res.json({ isAdmin, isSuperAdmin });
-      });
-    });
-  });
+  } catch (err) {
+    console.error("Error checking admin status:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
+});
 
 module.exports = router;

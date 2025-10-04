@@ -1,58 +1,70 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
 
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
 
-const usersFile = path.join(__dirname, "../data/users.txt");
-const requestsFile = path.join(__dirname, "../data/groupRequests.txt");
+router.post("/", async (req, res) => {
+  const { username, groupId } = req.body;
 
-router.post("/", (req, res) => {
-  console.log
-  const user = {
-    username: req.body.username,
-    groupId: req.body.groupId,  
-    status: "pending",          
-    permission: "user",        
-    need: "Join Permission"
+  if (!username || !groupId) {
+    return res.status(400).json({ error: "Missing username or groupId" });
+  }
+
+  const requestObj = {
+    username,
+    groupId,
+    status: "pending",
+    permission: "user",
+    need: "Join Permission",
   };
 
-  // Read the requests file
-  fs.readFile(requestsFile, "utf8", (err, requestsData) => {
-    if (err) {
-      console.log("Error reading requests file");
-      return res.json({ error: "Internal server error (requests)" });
+  try {
+    const client = new MongoClient(url);
+    await client.connect();
+    const db = client.db(dbName);
+    const groupsCollection = db.collection("groups");
+    const requestsCollection = db.collection("groupRequests");
+
+    // Check if the user is banned from the group
+    const group = await groupsCollection.findOne({ id: parseInt(groupId) });
+    
+    if (!group) {
+      await client.close();
+      return res.status(404).json({ error: "Group not found" });
     }
 
-    let requests = [];
-    try {
-      requests = JSON.parse(requestsData);
-    } catch (err) {
-      console.log("Error parsing requests.txt");
-      return res.json({ error: "Corrupted requests data" });
+    // If the group has a 'banned' list and the user is in it, prevent the request
+    if (group.banned && group.banned.includes(username)) {
+      await client.close();
+      return res.status(403).json({ error: "You are banned from this group" });
     }
 
-    // Check if there's already a pending request for this user to join the group
-    const existingRequest = requests.find(r => r.username === user.username && r.groupId === user.groupId);
-    if (existingRequest) {
-      return res.json({ valid: false });
-    }
-
-    requests.push(user);
-
-    // updated the requests file
-    fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
-      if (err) {
-        console.log("Error writing to requests.txt");
-        return res.json({ error: "Failed to update requests file" });
-      }
-
-      // Respond with the request status
-      console.log("Join group request submitted:", user.username, "for group:", user.groupId);
-      res.json({ valid: true });
+    // Check if there's already a pending request for this user & group
+    const existingRequest = await requestsCollection.findOne({
+      username,
+      groupId,
+      status: "pending",
     });
-  });
+
+    if (existingRequest) {
+      await client.close();
+      return res.json({ valid: false, message: "Request already pending" });
+    }
+
+    // Insert new request
+    await requestsCollection.insertOne(requestObj);
+
+    await client.close();
+
+    console.log("Join group request submitted:", username, "for group:", groupId);
+    res.json({ valid: true });
+  } catch (err) {
+    console.error("Error handling join group request:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 module.exports = router;

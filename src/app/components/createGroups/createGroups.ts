@@ -31,7 +31,7 @@ export class CreateGroup {
     let rolesArray = roles.split(","); // splits into ["admin", "user", "superAdmin"]
 
     // Example check if admin exists
-    if (rolesArray.includes("admin")) {
+    if (rolesArray.includes("admin") || rolesArray.includes("superAdmin")) {
       this.isAdmin = true;
     }
 

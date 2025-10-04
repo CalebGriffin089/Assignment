@@ -1,76 +1,65 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
 const router = express.Router();
+const { MongoClient } = require('mongodb');
 
-router.post("/", (req, res) => {
-  const { id, currentChannel } = req.body; 
+const url = 'mongodb://localhost:27017';
+const client = new MongoClient(url);
+const dbName = 'mydb';
 
-  const channelsFile = path.join(__dirname, "../data/channels.txt"); 
-  const usersFile = path.join(__dirname, "../data/users.txt"); 
+router.post("/", async (req, res) => {
+  const { id: username, currentChannel } = req.body;
 
-  fs.readFile(usersFile, "utf8", (err, userData) => {
-      if (err) {
-        console.log("Error reading users.txt");
-        return res.json({ error: "Internal server error (users)" });
-      }
+  let db;
+  try {
+    // Connect to the database
+    await client.connect();
+    db = client.db(dbName);
 
-      let users = [];
-      try {
-        users = JSON.parse(userData);
-      } catch (err) {
-        console.log("Error parsing users.txt");
-        return res.json({ error: "Corrupted users data" });
-      }
+    // Get collections
+    const usersCollection = db.collection('users');
+    const channelsCollection = db.collection('channels');
 
-      // Find the user by id and remove the currentGroup id from their groups array
-      const user = users.find(u => u.username === id);
-      if(user.roles.includes('superAdmin')){
-        console.log("Super Admin cannot be kicked")
-        return res.json({error: "cannot remove a super admin"});  
-      }
+    // Fetch the user
+    const user = await usersCollection.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-      // Read channels.txt
-      fs.readFile(channelsFile, "utf8", async (err, channelData) => {
-        if (err) {
-          console.log("Error reading channels.txt");
-          return res.json({ error: "Internal server error (channels)" });
-        }
+    // Prevent kicking a superAdmin
+    if (user.roles && user.roles.includes("superAdmin")) {
+      console.log("Super Admin cannot be kicked");
+      return res.json({ error: "cannot remove a super admin" });
+    }
 
-        let channels = [];
-        try {
-          channels = JSON.parse(channelData);
-        } catch (err) {
-          console.log("Error parsing channels.txt");
-          return res.json({ error: "Corrupted channel data" });
-        }
+    // Fetch the channel
+    const channel = await channelsCollection.findOne({ name: currentChannel });
+    if (!channel) {
+      return res.status(404).json({ success: false, message: "Channel not found" });
+    }
 
-        // Find the channel corresponding to the groupId
-        const channel = channels.find(ch => ch.name == (currentChannel));
-        
-        
-        if (!channel) {
-          return res.json({ success: false, message: "Channel not found for the group" });
-        }
+    // Check if user is a member
+    const isMember = channel.members && channel.members.includes(username);
+    if (!isMember) {
+      return res.json({ success: false, message: "User is not a member of the channel" });
+    }
 
-        const userIndex = channel.members.indexOf(id);
-        if (userIndex === -1) {
-          return res.json({ success: false, message: "User is not a member of the channel" });
-        }
+    // Remove user from members
+    const updatedMembers = channel.members.filter(member => member !== username);
+    await channelsCollection.updateOne(
+      { name: currentChannel },
+      { $set: { members: updatedMembers } }
+    );
 
-        // Remove the user from the members list
-        channel.members.splice(userIndex, 1);
+    console.log(`User ${username} removed from channel ${currentChannel}`);
+    return res.json({ success: true, message: "User removed from channel" });
 
-        // update channels.txt
-        fs.writeFile(channelsFile, JSON.stringify(channels, null, 2), "utf8", (err) => {
-          if (err) {
-            console.log("Error writing channels.txt");
-            return res.status(500).json({ error: "Failed to update channels" });
-          }
-        });
-      });
-    });  
+  } catch (err) {
+    console.error("Error removing user from channel:", err);
+    return res.status(500).json({ error: "Internal server error" });
+  } finally {
+    // Ensure the connection is closed after the operation
+    await client.close();
+  }
 });
 
 module.exports = router;

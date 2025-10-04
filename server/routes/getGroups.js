@@ -1,43 +1,50 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   const username = req.body.username;
-  const usersFile = path.join(__dirname, "../data/users.txt");
+  if (!username) {
+    return res.status(400).json({ error: "Missing username" });
+  }
 
-  fs.readFile(usersFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading users.txt");
-      return res.json({ error: "Internal server error (users)" });
-    }
+  const client = new MongoClient(url);
 
-    let users = [];
-    try {
-      users = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.json({ error: "Corrupted users data" });
-    }
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+    const usersCollection = db.collection("users");
 
+    // Find the user by username
+    const user = await usersCollection.findOne({ username: String(username) });
+    console.log("FILTERS",username);
+    let groups = [];
 
-    const user = users.find(u => u.username === username);
-    let groups; 
-
-    // First, check if the user exists
     if (user) {
-        // if the user exists get its groups array
-        groups = user.groups;
-    } else {
-      // If user is null or undefined
-      groups = [];
+      groups = user.groups || [];
+    }
+    // Filter out groups where the user is banned
+    const filteredGroups = [];
+
+    for (const group of groups) {
+      const groupCollection = db.collection("groups");
+      const groupData = await groupCollection.findOne({ id: parseInt(group) }); // Assuming group is identified by _id
+      if (groupData && !groupData.banned.includes(username)) {
+        filteredGroups.push(group); // Add to filtered list if user is not banned
+      }
     }
 
-    console.log(groups);
-    res.json({ groups: groups });
-  });
+    res.json({ groups: filteredGroups });
+
+  } catch (err) {
+    console.error("Error fetching user data:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

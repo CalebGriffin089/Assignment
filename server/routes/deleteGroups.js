@@ -1,113 +1,65 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-  const groupIdToDelete = req.body.groupId;
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
 
-  const usersFile = path.join(__dirname, "../data/users.txt");
-  const groupsFile = path.join(__dirname, "../data/groups.txt");
-  const channelsFile = path.join(__dirname, "../data/channels.txt");
+router.post("/", async (req, res) => {
+  const groupIdToDelete = parseInt(req.body.groupId);
+  if (!groupIdToDelete) {
+    return res.status(400).json({ error: "Missing or invalid groupId" });
+  }
 
-  //Read groups.txt
-  fs.readFile(groupsFile, "utf8", (err, groupData) => {
-    if (err) {
-      console.log("Error reading groups.txt");
-      return res.json({ error: "Internal server error (groups)" });
+  const client = new MongoClient(url);
+
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+
+    // 1. Delete the group document
+    const groupsCollection = db.collection("groups");
+    const deleteGroupResult = await groupsCollection.deleteOne({ id: groupIdToDelete });
+
+    if (deleteGroupResult.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: "Group not found" });
     }
 
-    let groups = [];
-    try {
-      groups = JSON.parse(groupData);
-    } catch (err) {
-      console.log("Error parsing groups.txt");
-      return res.json({ error: "Corrupted group data" });
-    }
+    // 2. Delete all channels with that groupId
+    const channelsCollection = db.collection("channels");
+    const channelsToDelete = await channelsCollection.find({ groupId: String(groupIdToDelete) }).toArray();
 
-    const groupIndex = groups.findIndex(g => parseInt(g.id) === parseInt(groupIdToDelete));
-    if (groupIndex === -1) {
-      return res.json({ success: false, message: "Group not found" });
-    }
 
-    // Remove the group
-    groups.splice(groupIndex, 1);
-
-    // update groups.txt
-    fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
-      if (err) {
-        console.log("Error writing groups.txt");
-        return res.json({ error: "Failed to update groups.txt" });
-      }
-
-      // Read channels.txt
-      fs.readFile(channelsFile, "utf8", (err, channelData) => {
-        if (err) {
-          console.log("Error reading channels.txt");
-          return res.json({ error: "Internal server error (channels)" });
-        }
-
-        let channels = [];
-        try {
-          channels = JSON.parse(channelData);
-        } catch (err) {
-          console.log("Error parsing channels.txt");
-          return res.json({ error: "Corrupted channel data" });
-        }
-
-        // Remove all channels associated with the group
-        channels = channels.filter(channel => {
-          return parseInt(channel.groupId) !== parseInt(groupIdToDelete);
-        });
-
-        // updated channels.txt
-        fs.writeFile(channelsFile, JSON.stringify(channels, null, 2), "utf8", (err) => {
-          if (err) {
-            console.log("Error writing channels.txt");
-            return res.json({ error: "Failed to update channels.txt" });
-          }
-
-          // Read users.txt
-          fs.readFile(usersFile, "utf8", (err, userData) => {
-            if (err) {
-              console.log("Error reading users.txt");
-              return res.json({ error: "Internal server error (users)" });
-            }
-
-            let users = [];
-            try {
-              users = JSON.parse(userData);
-            } catch (err) {
-              console.log("Error parsing users.txt");
-              return res.json({ error: "Corrupted user data" });
-            }
-
-            // Remove group from all users
-            users = users.map(user => {
-              if (Array.isArray(user.groups)) {
-                user.groups = user.groups.filter(gId => parseInt(gId) !== parseInt(groupIdToDelete));
-              }
-              return user;
-            });
-
-            // update users.txt
-            fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
-              if (err) {
-                console.log("Error writing users.txt");
-                return res.status(500).json({ error: "Failed to update users.txt" });
-              }
-
-              console.log(`Group ${groupIdToDelete} deleted, channels removed, and group references cleared from users.`);
-              res.json({
-                success: true
-              });
-            });
-          });
-        });
-      });
+    // 3. Delete all messages associated with the channels and the groupId
+    const messagesCollection = db.collection("messages");
+    const channelIds = channelsToDelete.map(channel => String(channel.name)); // Assuming channel.id exists
+    await messagesCollection.deleteMany({
+      $and: [
+        { channel: { $in: ['1'] } },   // Message must be in the specified channels
+        { group: String('3') }   // Message must match the groupId
+      ]
     });
-  });
+    console.log("GONE:",channelIds);
+    // 4. Delete the channels themselves
+    await channelsCollection.deleteMany({ groupId: String(groupIdToDelete) });
+
+    // 5. Remove the groupId from all users' groups arrays
+    const usersCollection = db.collection("users");
+    await usersCollection.updateMany(
+      { groups: groupIdToDelete },
+      { $pull: { groups: groupIdToDelete } }
+    );
+
+    console.log(`Group ${groupIdToDelete} deleted; related channels, messages, and user references cleared.`);
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error("Error deleting group:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

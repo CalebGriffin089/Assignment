@@ -11,27 +11,64 @@
     <div class="card shadow-lg p-4">
       <h1 class="text-center mb-4">Messages</h1>
 
-      <!-- Message input -->
-      <div class="input-group mb-4">
-        <input type="text" 
-               class="form-control" 
-               [ngModel]="messageOut()" 
-               (ngModelChange)="messageOut.set($event)" 
-               name="messageOut" 
-               id="messageOut" 
-               placeholder="Type a message...">
-        <button class="btn btn-primary" (click)="send()">Send</button>
+      <div class="container">
+        <h1> File Upload</h1>
+        <form (ngSubmit)="onUpload()">
+  <div class="form-group">
+    <input 
+      type="file" 
+      class="form-control" 
+      (change)="onFileSelected($event)" 
+      name="uploadfile" 
+      id="uploadfile" />
+  </div>
+  
+  <!-- Message input -->
+  <div class="input-group mb-4">
+    <input 
+    type="text" 
+    class="form-control" 
+    [(ngModel)]="messageOutMsg" 
+    name="messageOut" 
+    id="messageOut" 
+    placeholder="Type a message..."
+  />
+    <button class="btn btn-primary" type="submit">Send</button>
+  </div>
+</form>
       </div>
+
+      
 
       <!-- Received messages -->
       <div *ngIf="messageIn().length > 0" class="mb-4">
-        <label class="fw-bold mb-2">Received:</label>
-        <div class="border rounded p-3 bg-white" style="max-height: 200px; overflow-y: auto;">
-          <div *ngFor="let msg of messageIn()">
-            <p class="alert alert-secondary py-2 mb-2">{{ msg }}</p>
+          <label class="fw-bold mb-2">Received:</label>
+          <div class="border rounded p-3 bg-white" style="max-height: 200px; overflow-y: auto;">
+            <div *ngFor="let msg of messageIn()">
+              <!-- Profile Image and Username -->
+              <div class="d-flex align-items-center mb-2">
+                <!-- Profile Image -->
+                <img *ngIf="msg.profileImage" [src]="getSanitizedUrl(msg.profileImage)" alt="Profile Image" 
+                    class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">        
+                
+                <!-- Username -->
+                <span class="fw-bold" style="margin-right: 10px;">
+                  
+                  {{ msg.username }}</span>
+                
+                <!-- Message Content -->
+                 <div class="alert alert-secondary py-2 mb-2" style="display: inline-block;">
+                    <p >{{ msg.msg }}</p>
+                    <div *ngIf="hasImage(msg.image)">
+                      <img [src]="getSanitizedUrl(msg.image)" alt="Received Image" 
+                          style="max-width: 150px; max-height: 150px; object-fit: cover; margin-top: 10px;">
+                    </div>
+                  </div>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+
 
       <!-- Groups -->
       <div *ngIf="groups.length > 0" class="mb-4">

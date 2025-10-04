@@ -1,78 +1,53 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-  
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
+
+router.post("/", async (req, res) => {
   const usernameToDelete = req.body.username;
+  if (!usernameToDelete) {
+    return res.status(400).json({ error: "Missing username" });
+  }
 
-  const usersFile = path.join(__dirname, "../data/users.txt");
-  const groupsFile = path.join(__dirname, "../data/groups.txt");
+  const client = new MongoClient(url);
 
-  // Read users.txt
-  fs.readFile(usersFile, "utf8", (err, userData) => {
-    if (err) {
-      console.log("Error reading users.txt");
-      return res.json({ error: "Internal server error (users)" });
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+
+    const usersCollection = db.collection("users");
+    const groupsCollection = db.collection("groups");
+    const channelsCollection = db.collection("channels");
+    // 1. Delete the user document
+    const deleteUserResult = await usersCollection.deleteOne({ username: usernameToDelete });
+
+    if (deleteUserResult.deletedCount === 0) {
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    let users = [];
-    try {
-      users = JSON.parse(userData);
-    } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.json({ error: "Corrupted user data" });
-    }
-    // Find and remove user
-    const userIndex = users.findIndex(u => u.username === usernameToDelete);
-    if (userIndex === -1) {
-      return res.json({ success: false, message: "User not found" });
-    }
-    users.splice(userIndex, 1);
+    // 2. Remove the user from all groups members arrays
+    await groupsCollection.updateMany(
+      { members: usernameToDelete },
+      { $pull: { members: usernameToDelete } }
+    );
 
-    // Read groups.txt
-    fs.readFile(groupsFile, "utf8", (err, groupData) => {
-      if (err) {
-        console.log("Error reading groups.txt");
-        return res.json({ error: "Internal server error (groups)" });
-      }
+    await channelsCollection.updateMany(
+      { members: "1" },
+      { $pull: { members: "1" } }
+    );
 
-      let groups = [];
-      try {
-        groups = JSON.parse(groupData);
-      } catch (err) {
-        console.log("Error parsing groups.txt");
-        return res.json({ error: "Corrupted group data" });
-      }
+    console.log(`User ${usernameToDelete} deleted and removed from all groups`);
+    res.json({ success: true, message: "User deleted and removed from all groups" });
 
-      // Remove user from any group they are in
-      groups = groups.map(group => {
-          group.members = group.members.filter(member => member !== usernameToDelete);
-        return group;
-      });
-
-      // update users.txt
-      fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
-        if (err) {
-          console.log("Error writing users.txt");
-          return res.json({ error: "Failed to update users.txt" });
-        }
-
-        // update groups.txt
-        fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
-          if (err) {
-            console.log("Error writing groups.txt");
-            return res.json({ error: "Failed to update groups.txt" });
-          }
-
-          console.log(`User ${usernameToDelete} deleted and removed from groups`);
-          res.json({ success: true, message: "User deleted and removed from all groups" });
-        });
-      });
-    });
-  });
+  } catch (err) {
+    console.error("Error deleting user:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

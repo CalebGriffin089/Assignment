@@ -1,92 +1,57 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-  const user = {
-    id: null,
-    username: req.body.username,
-    email: req.body.email,
-    password: req.body.password,
-    groups: [],
-    roles: []
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
+
+router.post("/", async (req, res) => {
+  const { username, email, password } = req.body;
+
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "Missing username, email, or password" });
+  }
+
+  const userRequest = {
+    username,
+    email,
+    password,
   };
 
-  const usersFile = path.join(__dirname, "../data/users.txt");
-  const requestsFile = path.join(__dirname, "../data/accountRequests.txt"); // Path to requests.txt
+  try {
+    const client = new MongoClient(url);
+    await client.connect();
+    const db = client.db(dbName);
 
-  //read user file
-  fs.readFile(usersFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading users file");
-      return resjson({ error: "Internal server error (users)" });
+    const usersCollection = db.collection("users");
+    const requestsCollection = db.collection("accountRequests");
+
+    // Check if username already exists in users collection
+    const userExists = await usersCollection.findOne({ username });
+    if (userExists) {
+      await client.close();
+      return res.json({ valid: false, message: "Username already exists" });
     }
 
-    let fileData = [];
-    try {
-      fileData = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.json({ error: "Corrupted users data" });
+    // Check if username already requested in accountRequests collection
+    const requestExists = await requestsCollection.findOne({ username });
+    if (requestExists) {
+      await client.close();
+      return res.json({ valid: false, message: "Registration request already submitted" });
     }
 
-    // Check if username already exists
-    const exists = fileData.some(u => u.username === user.username);
-    if (exists) {
-      return res.json({ valid: false });
-    }
+    // Insert registration request
+    await requestsCollection.insertOne(userRequest);
 
-    // Assign new ID
-    if (fileData.length === 0) {
-      user.id = 1;
-    } else {
-      const lastId = parseInt(fileData[fileData.length - 1].id) || 0;
-      user.id = lastId + 1;
-    }
+    await client.close();
 
-    // Add request to requests.txt
-    const request = {
-      username: user.username,
-      email: user.email,
-      password: user.password,
-    };
-
-    fs.readFile(requestsFile, "utf8", (err, requestsData) => {
-      if (err) {
-        console.log("Error reading requests file");
-        return res.json({ error: "Internal server error (requests)" });
-      }
-
-      let requests = [];
-      try {
-        requests = JSON.parse(requestsData);
-      } catch (err) {
-        console.log("Error parsing requests.txt");
-        return res.json({ error: "Corrupted requests data" });
-      }
-
-      //check if username is already requested
-      const exists = requests.some(u => u.username === user.username);
-      if (exists) {
-        return res.json({ valid: false });
-      }
-      
-      // Add the new request to the requests array
-      requests.push(request);
-      // update requests.txt
-      fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
-        if (err) {
-          console.log("Error writing to requests.txt");
-          return res.json({ error: "Failed to update requests file" });
-        }
-
-        console.log("Registration request submitted:", user.username);
-        res.json({ valid: true });
-      });
-    });
-  });
+    console.log("Registration request submitted:", username);
+    res.json({ valid: true });
+  } catch (err) {
+    console.error("Error handling registration request:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 module.exports = router;

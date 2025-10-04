@@ -1,50 +1,55 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
+
+router.post("/", async (req, res) => {
   const groupId = req.body.groupId;
   let newChannels = req.body.newChannels;
 
-  const groupsFile = path.join(__dirname, "../data/groups.txt");
+  if (!groupId || !newChannels) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
 
-  fs.readFile(groupsFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading groups file");
-      return res.json({ error: "Internal server error (groups)" });
-    }
+  // Normalize newChannels to array
+  if (!Array.isArray(newChannels)) {
+    newChannels = [newChannels];
+  }
 
-    let groupsData = [];
-    try {
-      groupsData = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing groups.txt");
-      return res.json({ error: "Corrupted groups data" });
-    }
+  const client = new MongoClient(url);
 
-    const group = groupsData.find(g => parseInt(g.id) === parseInt(groupId));
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+    const groupsCollection = db.collection("groups");
+
+    // Find group by numeric id
+    const group = await groupsCollection.findOne({ id: parseInt(groupId) });
     if (!group) {
-      return res.json({ error: "Group not found" });
+      return res.status(404).json({ error: "Group not found" });
     }
 
-    // Add new channels, avoiding duplicates
-    if (!group.channels.includes(newChannels)) {
-      group.channels.push(newChannels);
-    }
+    // Merge new channels into existing channels, avoid duplicates
+    const updatedChannels = Array.from(new Set([...(group.channels || []), ...newChannels]));
 
-    // Save updated groups.txt
-    fs.writeFile(groupsFile, JSON.stringify(groupsData, null, 2), "utf8", (err) => {
-      if (err) {
-        console.log("Error writing groups file");
-        return res.json({ error: "Failed to update groups" });
-      }
+    // Update group document channels array
+    await groupsCollection.updateOne(
+      { id: parseInt(groupId) },
+      { $set: { channels: updatedChannels } }
+    );
 
-      console.log(`Added channels to group ${groupId}:`, newChannels);
-      res.json({ success: true, channels: group.channels });
-    });
-  });
+    console.log(`Added channels to group ${groupId}:`, newChannels);
+    res.json({ success: true, channels: updatedChannels });
+
+  } catch (err) {
+    console.error("Error updating group channels:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

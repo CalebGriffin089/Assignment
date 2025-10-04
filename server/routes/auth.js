@@ -1,36 +1,38 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
-const usersFile = path.join(__dirname, "../data/users.txt");
 
-router.post("/", (req, res) => {
+const url = "mongodb://localhost:27017";
+const client = new MongoClient(url);
+const dbName = "mydb";
+
+router.post("/", async (req, res) => {
   const { username, password } = req.body;
-  
-  fs.readFile(usersFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading users.txt");
-      return res.json({ error: "Internal server error (users)" });
-    }
 
-    let users = [];
-    try {
-      users = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.json({ error: "Corrupted users data" });
-    }
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB");
 
-    //check the username and password are right
-    const user = users.find(u => u.username === username && u.password === password);
+    const db = client.db(dbName);
+    const usersCollection = db.collection("users");
+
+    // Find user by username and password
+    const user = await usersCollection.findOne({ username, password });
 
     if (user) {
-      res.json({ ...user, valid: true });
+      // Exclude password from response for security
+      const { password, ...userWithoutPassword } = user;
+      res.json({ ...userWithoutPassword, valid: true });
     } else {
       res.json({ valid: false });
     }
-  });
+  } catch (err) {
+    console.error("Error accessing database:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

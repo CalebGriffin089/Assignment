@@ -1,29 +1,31 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
 const router = express.Router();
+const { MongoClient } = require('mongodb');
 
-router.get("/", (req, res) => {
-  const requestsFile = path.join(__dirname, "../data/accountRequests.txt");
+const url = 'mongodb://localhost:27017';
+const client = new MongoClient(url);
+const dbName = 'mydb';
 
-  // Read requests.txt to get all registration requests
-  fs.readFile(requestsFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading requests.txt");
-      return res.json({ error: "Internal server error (requests)" });
-    }
+router.get("/", async (req, res) => {
+  let db;
 
-    let requests = [];
-    try {
-      requests = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing requests.txt");
-      return res.json({ error: "Corrupted requests data" });
-    }
-    // Send all requests as a response
+  try {
+    // Connect to the database
+    await client.connect();
+    db = client.db(dbName);
+    const accountRequestsCollection = db.collection('accountRequests');
+    
+    // Fetch all account requests
+    const requests = await accountRequestsCollection.find({}).toArray();
+    
     res.json({ requests });
-  });
+  } catch (err) {
+    console.error("Error fetching account requests:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    // Ensure the connection is closed after the query
+    await client.close();
+  }
 });
 
 module.exports = router;

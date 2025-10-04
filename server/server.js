@@ -3,10 +3,10 @@
   const path = require('path');
   const http = require('http');
   const socketIo = require('socket.io');
-
+  const listen = require("./listen.js")
   const fs = require('fs');
   const app = express();
-  const listen = require("./listen.js")
+
   const sockets = require("./socket.js");
   const { group } = require('console');
   app.use(cors());
@@ -17,6 +17,16 @@
       methods: ['GET', 'POST'],
     }
   });
+
+
+
+ 
+  //app.use(express.static(path.join(__dirname , '../dist/imageupload/')));
+  // app.use('/images',express.static(path.join(__dirname , './userimages')));
+  // app.use(cors());
+  // require('./routes/uploads.js')(app,formidable,fs,path);
+  // require('./listen.js')(http);
+  app.use('/userImages',express.static(path.join(__dirname , './userimages')));
 
   // Middleware
   app.use(express.static(__dirname + '/www'));
@@ -46,6 +56,9 @@
   app.use("/api/getAdmin", require("./routes/getAdmin.js"));
   app.use("/api/promoteSuperAdmin", require("./routes/promoteSuperAdmin.js"));
   app.use("/api/getUserRequests", require("./routes/getUserRequests.js"));
+  app.use("/api/upload", require("./routes/uploadImage.js"));
+  app.use("/api/saveMessage", require("./routes/saveMessage.js"));
+  app.use("/api/getMessages", require("./routes/getMessages.js"));
   // API endpoint
   
 

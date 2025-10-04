@@ -1,48 +1,48 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
 
-// Path to the users, groups, and accountRequests files
-router.post("/", (req, res) => {
-  const user = {
-    username: req.body.username,
-    file: req.body.file
-  };
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
 
-  const requestsFile = path.join(__dirname, "../data/"+ user.file + "Requests.txt");
+router.post("/", async (req, res) => {
+  const { username, file } = req.body;
 
-  //read the requests file (accountRequests or groupRequests)
-  fs.readFile(requestsFile, "utf8", (err, requestsData) => {
-    if (err) {
-      console.log("Error reading accountRequests file");
-      return res.json({ error: "Internal server error (requests)" });
+  if (!username || !file) {
+    return res.status(400).json({ error: "Missing username or file type" });
+  }
+
+  // Determine collection based on file param
+  const collectionName = file === "account" ? "accountRequests" :
+                         file === "group" ? "groupRequests" :
+                         null;
+
+  if (!collectionName) {
+    return res.status(400).json({ error: "Invalid file type specified" });
+  }
+
+  try {
+    const client = new MongoClient(url);
+    await client.connect();
+    const db = client.db(dbName);
+    const requestsCollection = db.collection(collectionName);
+
+    // Remove the request by username
+    const result = await requestsCollection.deleteOne({ username });
+
+    await client.close();
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({ valid: false, message: "Request not found" });
     }
 
-    let requests = [];
-    try {
-      requests = JSON.parse(requestsData);
-    } catch (err) {
-      console.log("Error parsing accountRequests.txt");
-      return resjson({ error: "Corrupted requests data" });
-    }
-
-    // Remove the request from the request file
-    const requestIndex = requests.findIndex(req => req.username === user.username);
-    if (requestIndex !== -1) {
-      requests.splice(requestIndex, 1); 
-    }
-
-    // update the request file
-    fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
-      if (err) {
-        console.log("Error writing to accountRequests file");
-        return res.json({ error: "Failed to update requests file" });
-      }
-
-      console.log(`${user.username} has declined the group ${user.groupId}`);
-    });
-  });
+    console.log(`${username} has declined the ${file} request`);
+    res.json({ valid: true });
+  } catch (err) {
+    console.error("Error updating requests:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
+
 module.exports = router;

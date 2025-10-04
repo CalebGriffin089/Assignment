@@ -1,50 +1,76 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
 const router = express.Router();
+const { MongoClient } = require("mongodb");
 
-router.post("/", (req, res) => {
+const url = "mongodb://localhost:27017"; // MongoDB connection URL
+const client = new MongoClient(url);
+const dbName = "mydb"; // Replace with your database name
+
+const db = client.db(dbName);
+
+router.post("/", async (req, res) => {
   const { username } = req.body;
 
-  const usersFile = path.join(__dirname, "../data/users.txt");
+  try {
+    await client.connect();
 
-  // Read users.txt (to update the user's roles)
-  fs.readFile(usersFile, "utf8", (err, userData) => {
-    if (err) {
-      console.log("Error reading users.txt");
-      return res.json({ error: "Internal server error (users)" });
+    const usersCollection = db.collection("users");
+    const groupsCollection = db.collection("groups");
+    const channelsCollection = db.collection("channels");
+
+    // 1. Find the user by username
+    const user = await usersCollection.findOne({ username });
+
+    if (!user) {
+      console.log("User not found");
+      return res.json({ success: false, message: "User not found" });
     }
 
-    let users = [];
-    try {
-      users = JSON.parse(userData);
-    } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.json({ error: "Corrupted users data" });
+    // 2. Add 'superAdmin' role if not already present
+    if (!user.roles.includes("superAdmin")) {
+      user.roles.push("superAdmin");
+
+      // Update the user in the database
+      await usersCollection.updateOne(
+        { username },
+        { $set: { roles: user.roles } }
+      );
     }
 
-    // Find the user and add 'superAdmin' to their roles array
-    const user = users.find(u => u.username === username);
-    if (user) {
-      if (!user.roles.includes('superAdmin')) {
-        user.roles.push('superAdmin');
-      }
-    } else {
-      console.log("User not found in users file");
-      return res.json({ success: false, message: "User not found in users file" });
-    }
+    // 3. Add user to all groups
+    await groupsCollection.updateMany(
+      {}, // Match all groups
+      { $addToSet: { members: username } } // Add the user to the 'members' array if not already present
+    );
 
-    // update users.txt
-    fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
-      if (err) {
-        console.log("Error writing to users.txt");
-        return res.json({ error: "Failed to update users" });
-      }
+    // 4. Add user to all channels
+    await channelsCollection.updateMany(
+      {}, // Match all channels
+      { $addToSet: { members: username } } // Add the user to the 'members' array if not already present
+    );
 
-      res.json({ success: true });
+    // 5. Update user's groups array with all groups they're now a part of
+    const allGroups = await groupsCollection.find().toArray(); // Fetch all groups
+    const allGroupIds = allGroups.map(group => group.id); // Extract group IDs
+
+    // Update the user's groups array if they aren't already in those groups
+    await usersCollection.updateOne(
+      { username },
+      { $addToSet: { groups: { $each: allGroupIds } } } // Add all group IDs to the user's groups array
+    );
+
+    console.log(`User ${username} added as 'superAdmin', added to all groups and channels, and updated their groups array`);
+    res.json({
+      success: true,
+      message: `User ${username} is now a superAdmin, added to all groups and channels, and their groups array has been updated.`
     });
-  });
+
+  } catch (error) {
+    console.error("Error updating user roles:", error);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

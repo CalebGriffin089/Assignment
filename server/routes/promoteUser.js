@@ -1,92 +1,63 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
 const router = express.Router();
+const { MongoClient } = require("mongodb");
 
-router.post("/", (req, res) => {
+const url = "mongodb://localhost:27017"; // MongoDB connection URL
+const client = new MongoClient(url);
+const dbName = "mydb"; // Replace with your database name
+
+const db = client.db(dbName);
+
+router.post("/", async (req, res) => {
   const { id, currentGroup } = req.body;
 
-  const groupsFile = path.join(__dirname, "../data/groups.txt"); // Path to groups.txt
-  const usersFile = path.join(__dirname, "../data/users.txt"); // Path to users.txt
+  try {
+    await client.connect();
 
-  // Read groups.txt (to get group details)
-  fs.readFile(groupsFile, "utf8", (err, groupData) => {
-    if (err) {
-      console.log("Error reading groups.txt");
-      return res.status(500).json({ error: "Internal server error (groups)" });
-    }
+    const groupsCollection = db.collection("groups");
+    const usersCollection = db.collection("users");
 
-    let groups = [];
-    try {
-      groups = JSON.parse(groupData);
-    } catch (err) {
-      console.log("Error parsing groups.txt");
-      return res.status(500).json({ error: "Corrupted group data" });
-    }
-
-    const group = groups.find(g => g.id == currentGroup);
+    // Find the group by id
+    const group = await groupsCollection.findOne({ id: parseInt(currentGroup) });
     if (!group) {
       return res.status(404).json({ success: false, message: "Group not found" });
     }
 
-    // Check if the user is a member of the group
+    // Ensure members and admins arrays exist
     if (!Array.isArray(group.members)) group.members = [];
-    const userIndex = group.members.indexOf(id);
-    if (userIndex === -1) {
+    if (!Array.isArray(group.admins)) group.admins = [];
+
+    // Check if user is a member
+    if (!group.members.includes(id)) {
       return res.status(404).json({ success: false, message: "User is not a member of the group" });
     }
 
-    if (!Array.isArray(group.admins)) group.admins = [];
+    // Check if user is already an admin
     if (group.admins.includes(id)) {
       return res.status(400).json({ success: false, message: "User is already an admin" });
     }
 
-    // Promote the user to admin by adding them to the admins array
+    // Promote user to admin in the group
     group.admins.push(id);
+    await groupsCollection.updateOne({ id: parseInt(currentGroup) }, { $set: { admins: group.admins } });
 
-    // Read users.txt (to update the user's role)
-    fs.readFile(usersFile, "utf8", (err, userData) => {
-      if (err) {
-        console.log("Error reading users.txt");
-        return res.status(500).json({ error: "Internal server error (users)" });
-      }
+    // Find the user and update their role
+    const user = await usersCollection.findOne({ username: id });
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found in users collection" });
+    }
 
-      let users = [];
-      try {
-        users = JSON.parse(userData);
-      } catch (err) {
-        console.log("Error parsing users.txt");
-        return res.status(500).json({ error: "Corrupted users data" });
-      }
+    // Update the user's role to 'admin' (or add it to their roles array)
+    const updatedRoles = user.roles ? [...user.roles, 'admin'] : ['admin'];
+    await usersCollection.updateOne({ username: id }, { $set: { roles: updatedRoles } });
 
-      // Find the user and update their role to 'admin'
-      const user = users.find(u => u.username === id);
-      if (user) {
-        user.role = 'admin'; 
-      } else {
-        console.log("User not found in users file");
-        return res.status(404).json({ success: false, message: "User not found in users file" });
-      }
-
-      //update users.txt
-      fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
-        if (err) {
-          console.log("Error writing to users.txt");
-          return res.status(500).json({ error: "Failed to update users" });
-        }
-
-        // Save updated groups.txt
-        fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
-          if (err) {
-            console.log("Error writing groups.txt");
-            return res.status(500).json({ error: "Failed to update groups" });
-          }
-          res.json({ success: true });
-        });
-      });
-    });
-  });
+    res.json({ success: true });
+  } catch (error) {
+    console.error("Error promoting user:", error);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

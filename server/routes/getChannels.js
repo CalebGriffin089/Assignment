@@ -1,95 +1,64 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-  const groupId = req.body.id;
-  const username = req.body.username;
-  const groupsFile = path.join(__dirname, "../data/groups.txt");
-  const channelsFile = path.join(__dirname, "../data/channels.txt");  // Path to channels file
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
 
-  // Read the groups.txt file to get group details
-  fs.readFile(groupsFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading groups file");
-      return res.json({ error: "Internal server error (groups)" });
+router.post("/", async (req, res) => {
+  const { groupId, username } = req.body;
+  if (!groupId || !username) {
+    return res.status(400).json({ error: "Missing groupId or username" });
+  }
+
+  const client = new MongoClient(url);
+
+  try {
+    await client.connect();
+    console.log("Connected to MongoDB");
+
+    const db = client.db(dbName);
+    const groupsCollection = db.collection("groups");
+    const channelsCollection = db.collection("channels");
+
+    // Step 1: Find the group by groupId
+    const group = await groupsCollection.findOne({ id: parseInt(groupId) });
+
+    if (!group) {
+      return res.status(404).json({ error: "Group not found" });
     }
 
-    let groupsData = [];
-    try {
-      groupsData = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing groups.txt");
-      return res.json({ error: "Corrupted groups data" });
-    }
+    const groupChannels = group.channels || [];
+    const groupMembers = group.members || [];
 
-    let channels = [];
-    let members = [];
+    // Step 2: Fetch the channels that the group has access to
+    const channels = await channelsCollection
+      .find({ name: { $in: groupChannels }, groupId: String(groupId) })
+      .toArray();
 
-    // Find the group based on the given groupId
-    const group = groupsData.find(g => parseInt(g.id) === parseInt(groupId));
-    if (group) {
-      channels = group.channels;
-      members = group.members;
-    }
+    // Step 3: Filter channels where user is allowed
+    const allowedChannels = channels
+      .filter(channel => {
+        const isBanned = channel.banned && Array.isArray(channel.banned) && channel.banned.includes(username);
+        const isMember = channel.members && Array.isArray(channel.members) && channel.members.includes(username);
+        return isMember && !isBanned;
+      })
+      .map(channel => channel.name);
 
-    // Step 3: Read the channels.txt file to check banned users
-    fs.readFile(channelsFile, "utf8", (err, channelData) => {
-      if (err) {
-        console.log("Error reading channels file");
-        return res.json({ error: "Internal server error (channels)" });
-      }
-
-      let channelsData = [];
-      try {
-        channelsData = JSON.parse(channelData);
-      } catch (err) {
-        console.log("Error parsing channels.txt");
-        return res.json({ error: "Corrupted channels data" });
-      }
-
-      // Step 4: Check each channel to see if the user is banned or a member
-      let bannedUsersInChannels = [];
-      let allowedChannels = [];
-
-      // Loop through all the channels in the group
-      for (let i = 0; i < channels.length; i++) {
-        const channelId = channels[i];
-        let channel = null;
-
-        // Loop through all channels in channelsData to find the corresponding channel
-        for (let j = 0; j < channelsData.length; j++) {
-          if (channelsData[j].name === channelId) {
-            channel = channelsData[j];
-            break;  // Exit inner loop once the channel is found
-          }
-        }
-
-        if (channel) {
-          // Check if the user is banned from this channel
-          if (Array.isArray(channel.banned) && channel.banned.includes(username)) {
-            bannedUsersInChannels.push(channelId);
-          }
-
-          // Check if the user is a member of this channel
-          if (Array.isArray(channel.members) && channel.members.includes(username)) {
-            // Only add the channel if the user is either not banned or is a member
-            if (!bannedUsersInChannels.includes(channelId)) {
-              allowedChannels.push(channelId);
-            }
-          }
-        }
-      }
-
-      // Return the group information along with the allowed channels and members
-      res.json({
-        channels: allowedChannels,
-        members
-      });
+      console.log(allowedChannels);
+    // Step 4: Return the group information, allowed channels, and members
+    res.json({
+      channels: allowedChannels,
+      members: groupMembers,
     });
-  });
+
+  } catch (err) {
+    console.error("Error handling request:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

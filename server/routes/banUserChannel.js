@@ -1,82 +1,62 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
 
-router.post("/", (req, res) => {
-  const { id, currentChannel } = req.body;
+const url = "mongodb://localhost:27017";
+const client = new MongoClient(url);
+const dbName = "mydb";
 
-  console.log("Ban request - id:", id, "group:", currentChannel);
+router.post("/", async (req, res) => {
+  
 
-  const channelsFile = path.join(__dirname, "../data/channels.txt"); 
-  const usersFile = path.join(__dirname, "../data/users.txt");
+  
 
-  fs.readFile(usersFile, "utf8", (err, userData) => {
-    if (err) {
-      console.log("Error reading users.txt");
-      return res.json({ error: "Internal server error (users)" });
+  try {
+    const { currentGroup, user } = req.body;
+    console.log("Ban request - id:", user, "channel/group:", currentGroup);
+    await client.connect();
+    const db = client.db(dbName);
+    const usersCollection = db.collection("users");
+    const channelsCollection = db.collection("channels");
+
+    // Find user by username
+    const userProfile = await usersCollection.findOne({ username: user });
+    if (!userProfile) {
+      return res.status(404).json({ error: "User not found" });
     }
 
-    let users = [];
-    try {
-      users = JSON.parse(userData);
-    } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.json({ error: "Corrupted users data" });
+    if (userProfile.roles && userProfile.roles.includes("superAdmin")) {
+      console.log("Super Admin cannot be banned");
+      return res.status(403).json({ error: "Cannot remove a super admin" });
     }
 
-    // Find the user by id and remove the currentGroup id from their groups array
-    const user = users.find(u => u.username === id);
-    if(user.roles.includes('superAdmin')){
-      console.log("Super Admin cannot be banned")
-      return res.json({error: "cannot remove a super admin"});  
+    // Find channel by groupId (assuming currentChannel is groupId)
+    const channel = await channelsCollection.findOne({ groupId: String(currentGroup) });
+    if (!channel) {
+      return res.status(404).json({ success: false, message: "Channel not found for the group" });
     }
 
-      // read the channels file
-    fs.readFile(channelsFile, "utf8", (err, channelData) => {
-      if (err) {
-        console.log("Error reading channels.txt");
-        return res.json({ error: "Internal server error (channels)" });
-      }
+    // Remove user from members array if present
+    await channelsCollection.updateOne(
+      { groupId: String(currentGroup) },
+      { $pull: { members: user } }
+    );
 
-      let channels = [];
-      try {
-        channels = JSON.parse(channelData);
-      } catch (err) {
-        console.log("Error parsing channels.txt");
-        return res.json({ error: "Corrupted channel data" });
-      }
+    // Add user to banned array if not already present
+    await channelsCollection.updateOne(
+      { groupId: String(currentGroup) },
+      { $addToSet: { banned: user } }
+    );
 
-      // find the channel with the right group id
-      const channel = channels.find(ch => parseInt(ch.groupId) === parseInt(currentChannel));
-      if (!channel) {
-        return res.json({ success: false, message: "Channel not found for the group" });
-      }
-
-      // Remove the user from the members list if they exist
-      const userIndex = channel.members.indexOf(id);
-      if (userIndex !== -1) {
-        channel.members.splice(userIndex, 1); 
-      }
-
-      // Add the user to the banned list if they aren't already banned
-      if (!channel.banned.includes(id)) {
-        channel.banned.push(id);
-      }
-
-      // update channels.txt
-      fs.writeFile(channelsFile, JSON.stringify(channels, null, 2), "utf8", (err) => {
-        if (err) {
-          console.log("Error writing channels.txt");
-          return res.status(500).json({ error: "Failed to update channels" });
-        }
-
-        console.log(`User ${id} banned and removed from members list in the channel of group ${currentChannel}`);
-        res.json({ success: true });
-      });
-    });
-  });
+    console.log(`User ${user} banned and removed from members list in the channel of group ${currentGroup}`);
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Error processing ban request:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

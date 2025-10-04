@@ -1,86 +1,90 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
 const router = express.Router();
+const { MongoClient } = require('mongodb');
 
-router.post("/", (req, res) => {
-  const { id, currentGroup } = req.body;
+const url = 'mongodb://localhost:27017';
+const client = new MongoClient(url);
+const dbName = 'mydb'; // Replace with your actual DB name
 
-  console.log("Ban request - id:", id, "group:", currentGroup);
+// Connect to DB and get collections
+async function connectDb() {
+  await client.connect();
+  const db = client.db(dbName);
+  return {
+    groupsCollection: db.collection('groups'),
+    usersCollection: db.collection('users')
+  };
+}
 
-  const groupsFile = path.join(__dirname, "../data/groups.txt");
-  const usersFile = path.join(__dirname, "../data/users.txt");
+router.post("/", async (req, res) => {
+  const { name: name, currentGroup: groupId } = req.body;
+  
+  console.log("Leave request - id:", name, "group:", groupId);
 
-  // Read groups.txt
-  fs.readFile(groupsFile, "utf8", (err, groupData) => {
-    if (err) {
-      console.log("Error reading groups.txt");
-      return res.json({ error: "Internal server error (groups)" });
+  if (!name || !groupId) {
+    return res.status(400).json({ success: false, message: "Missing username or groupId" });
+  }
+
+  try {
+    // Step 1: Connect to DB
+    const { groupsCollection, usersCollection } = await connectDb();
+
+    const user = await usersCollection.findOne({ username: name });
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    let groups = [];
-    try {
-      groups = JSON.parse(groupData);
-    } catch (err) {
-      console.log("Error parsing groups.txt");
-      return res.json({ error: "Corrupted group data" });
+    if (user.roles.includes('admin') || user.roles.includes('superAdmin')){
+      return res.status(404).json({ success: false, message: "Admins cannot leave groups" });
     }
 
-    // find the group
-    const group = groups.find(g => parseInt(g.id) == parseInt(currentGroup));
+    // Step 2: Check if group exists using _id (MongoDB default)
+    const group = await groupsCollection.findOne({ id: parseInt(groupId) });
+
     if (!group) {
-      return res.json({ success: false, message: "Group not found" });
+      
+      return res.status(404).json({ success: false, message: "Group not found" });
+    }
+    
+    // Step 3: Remove the user from the group's members array
+    const groupUpdateResult = await groupsCollection.updateOne(
+      { id: parseInt(groupId) },
+      { $pull: { members: name } }
+    );
+    
+    if (groupUpdateResult.modifiedCount === 0) {
+          
+      return res.status(404).json({ success: false, message: "User not found in group members" });
+    }
+    
+    console.log(`User ${name} removed from group ${groupId}`);
+
+    // Step 4: Find the user in the users collection
+   
+    temp = parseInt(groupId)
+    // Step 5: Remove the group from the user's groups array
+    const userUpdateResult = await usersCollection.updateOne(
+      { username: name },
+      { $pull: { groups: temp } }
+    );
+
+    if (userUpdateResult.modifiedCount === 0) {
+      return res.status(404).json({ success: false, message: "Group not found in user's groups" });
     }
 
-    const memberIndex = group.members.indexOf(id);
-    if (memberIndex !== -1) {
-      group.members.splice(memberIndex, 1);
-    }
+    console.log(`Group ${groupId} removed from user ${name}'s groups`);
 
-    // update groups.txt
-    fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
-      if (err) {
-        console.log("Error writing groups.txt");
-        return res.json({ error: "Failed to update groups" });
-      }
+    // Step 6: Success response
+    res.json({ success: true, message: "User banned successfully" });
 
-      // Now update users.txt
-      fs.readFile(usersFile, "utf8", (err, userData) => {
-        if (err) {
-          console.log("Error reading users.txt");
-          return res.json({ error: "Internal server error (users)" });
-        }
-
-        let users = [];
-        try {
-          users = JSON.parse(userData);
-        } catch (err) {
-          console.log("Error parsing users.txt");
-          return res.json({ error: "Corrupted user data" });
-        }
-
-        // Remove this group from the user's groups array
-        for (let i = 0; i < users.length; i++) {
-          if (users[i].username === id && Array.isArray(users[i].groups)) {
-            users[i].groups = users[i].groups.filter(gId => parseInt(gId) !== parseInt(currentGroup));
-            break;
-          }
-        }
-
-        // update users.txt
-        fs.writeFile(usersFile, JSON.stringify(users, null, 2), "utf8", (err) => {
-          if (err) {
-            console.log("Error writing users.txt");
-            return res.json({ error: "Failed to update users" });
-          }
-
-          console.log(`User ${id} banned from group ${currentGroup} and removed from user's groups`);
-          res.json({ success: true });
-        });
-      });
-    });
-  });
+  } catch (error) {
+    console.error("Error banning user from group:", error);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    // Ensure the MongoDB client is closed
+    await client.close();
+  }
 });
 
 module.exports = router;

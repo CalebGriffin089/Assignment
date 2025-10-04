@@ -1,6 +1,15 @@
 import { Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { io,Socket } from 'socket.io-client'
+import { HttpClient } from '@angular/common/http';
+
+interface Message {
+  msg: string,
+  image: string,
+  username: 'Server',
+  profileImage: 'http://localhost:3000/userImages/profile.jpg'
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -11,25 +20,53 @@ export class Sockets {
   messages = signal<string[]>([]);
   private apiServer = "http://localhost:3000"
 
-  constructor(){
+  constructor(private httpService: HttpClient){
     this.socket = io(this.apiServer);
   }
 
-  sendMessage(msg:string, room:string){
-    this.socket.emit("message", msg, room)
+  saveMessage (msg:any, room:string, group:string){
+    this.httpService.post('http://localhost:3000/api/saveMessage', {msg: msg, channel: room, group: group}).pipe().subscribe();
   }
 
-  onMessage():Observable<string>{
-    let temp:Observable<string> = new Observable((observer)=>{
-      this.socket.on("response", (msg:string)=>{
+  sendMessage(msg:any, room:string, group:string){
+    if(group == ''){
+      this.socket.emit("message", msg, room)
+    }else{
+      this.saveMessage(msg, room, group)
+      this.socket.emit("message", msg, room)
+    } 
+  }
+
+  onMessage():Observable<any>{
+    let temp:Observable<any> = new Observable((observer)=>{
+      this.socket.on("response", (msg:any)=>{
         observer.next(msg);
       })
     })
     return temp
   }
 
-  joinRoom(rooms:string){
+  joinRoom(rooms:string, username:string){
      this.socket.emit('joinRoom', rooms);
+     console.log(rooms);
+     const msg: Message = {
+        msg: `${username} has joined the room.`,
+        image: 'http://localhost:3000/userImages/',
+        username: 'Server',
+        profileImage: 'http://localhost:3000/userImages/profile.jpg'
+      };
+     this.socket.emit("message", msg, rooms)
+     
+  }
+
+  leaveRoom(room:string, username:string){
+    const msg: Message = {
+        msg: `${username} has left the room.`,
+        image: 'http://localhost:3000/userImages/',
+        username: 'Server',
+        profileImage: 'http://localhost:3000/userImages/profile.jpg'
+      };
+     this.socket.emit("message", msg, room)
   }
 
   findRooms(){

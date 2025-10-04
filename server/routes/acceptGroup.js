@@ -1,134 +1,97 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
-
 const router = express.Router();
+const { MongoClient } = require('mongodb');
 
-const usersFile = path.join(__dirname, "../data/users.txt");
-const requestsFile = path.join(__dirname, "../data/groupRequests.txt");
-const groupsFile = path.join(__dirname, "../data/groups.txt");
+const url = 'mongodb://localhost:27017';
+const client = new MongoClient(url);
+const dbName = 'mydb';
 
-router.post("/", (req, res) => {
-  const user = {
-    username: req.body.username,
-    groupId: req.body.groupId,  
-  };
+router.post("/", async (req, res) => {
+  let { username, groupId } = req.body;
 
-  // Check if the user exists in the users file
-  fs.readFile(usersFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading users file");
-      return res.json({ error: "Internal server error (users)" });
-    }
+  await client.connect();
+  console.log('Connected to the server');
 
-    let usersData = [];
-    try {
-      usersData = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing users.txt");
-      return res.json({ error: "Corrupted users data" });
-    }
+  const db = client.db(dbName);
+  const userCollection = db.collection('users');
+  const groupCollection = db.collection('groups');
+  const groupRequests = db.collection('groupRequests');
+  groupId = parseInt(groupId);  // Ensure groupId is an integer
+  
+  try {
+    // Find the user in the userCollection
+    const user = await userCollection.findOne({ username });
+    console.log("User found:", user);
+
+    // Find the group in the groupCollection
+    const group = await groupCollection.findOne({ id: groupId });
+    console.log("Group found:", group);
     
-    // Find the user in the users data
-    const userIndex = usersData.findIndex(u => u.username === user.username);
-    if (userIndex === -1) {
-      removeRequest();
-      return res.json({ error: "User not found" });
+    groupId = parseInt(groupId);
+    // Check if both user and group exist
+    if (!user) {
+      console.log("User not found");
+      return res.status(404).json({ success: false, message: "User not found" });
     }
-    // Check if the user is banned
-    if (usersData[userIndex].isBanned) {
-      removeRequest();
-      return res.json({ error: "User is banned and cannot join a group" });
+    if (!group) {
+      console.log("Group not found");
+      return res.status(404).json({ success: false, message: "Group not found" });
     }
 
-    // find the group the user wants to join
-    fs.readFile(groupsFile, "utf8", (err, groupData) => {
-      if (err) {
-        console.log("Error reading groups file");
-        return res.json({ error: "Internal server error (groups)" });
-      }
-
-      let groups = [];
-      try {
-        groups = JSON.parse(groupData);
-      } catch (err) {
-        console.log("Error parsing groups.txt");
-        return res.json({ error: "Corrupted groups data" });
-      }
-
-      // Find the group by ID
-      const groupIndex = groups.findIndex(g => g.id === parseInt(user.groupId));
-      if (groupIndex === -1) {
-        removeRequest();
-        return res.json({ error: "Group not found" });
-      }
+    // Check if the user is already in the group
+    if (group.members && group.members.includes(username)) {
+      temp = String(groupId)
+      console.log(await groupRequests.findOne({ username: username, groupId: temp }))
+      await groupRequests.deleteMany({ username: username, groupId: temp });
+      console.log("User already in the group");
       
-      // Check if the user is already a member of the group
-      if (groups[groupIndex].members.includes(user.username)) {
-        removeRequest();
-        return res.json({ error: "User is already a member of this group" });
-      }
+      return res.json({ success: true, message: "User is already in the group" });
+    }
 
-      // Add the user to the group's members array
-      groups[groupIndex].members.push(user.username);
+    // If user is not in group, add the user to the group
+    if (!group.members) {
+      group.members = [];
+    }
 
-      // update the groups file
-      fs.writeFile(groupsFile, JSON.stringify(groups, null, 2), "utf8", (err) => {
-        if (err) {
-          console.log("Error writing to groups file");
-          return res.json({ error: "Failed to update groups file" });
-        }
+    // Add the user to the group's members
+    group.members.push(username);
 
-        // add the groupId to the user's groups array in users.txt
-        usersData[userIndex].groups.push(user.groupId);
+    // Update the group with the new members array
+    const groupUpdateResult = await groupCollection.updateOne(
+      { id: groupId },
+      { $set: { members: group.members } }
+    );
 
-        // Write the updated users data back to users.txt
-        fs.writeFile(usersFile, JSON.stringify(usersData, null, 2), "utf8", (err) => {
-          if (err) {
-            console.log("Error writing to users file");
-            return res.json({ error: "Failed to update users file" });
-          }
+    if (groupUpdateResult.modifiedCount === 0) {
+      console.log("Failed to update the group");
+      return res.status(500).json({ success: false, message: "Failed to update the group" });
+    }
 
-          //remove the user's request from accountRequests.txt
-          
-          res.json({ valid: true }); 
-        });
-      });
-    });
-  });
-  function removeRequest(){
-    fs.readFile(requestsFile, "utf8", (err, requestsData) => {
-      if (err) {
-        console.log("Error reading accountRequests file");
-        return res.json({ error: "Internal server error (requests)" });
-      }
+    // Optionally, you might want to add the group reference to the user document
+    const userUpdateResult = await userCollection.updateOne(
+      { username },
+      { $addToSet: { groups: groupId } }
+    );
 
-      let requests = [];
-      try {
-        requests = JSON.parse(requestsData);
-      } catch (err) {
-        console.log("Error parsing accountRequests.txt");
-        return res.json({ error: "Corrupted requests data" });
-      }
+    if (userUpdateResult.modifiedCount === 0) {
+      
+      console.log("Failed to update the user");
+      return res.status(500).json({ success: false, message: "Failed to update the user" });
+    }
 
-      // Remove the request from groupRequests.txt
-      const requestIndex = requests.findIndex(req => req.username === user.username && req.groupId === user.groupId);
-      if (requestIndex !== -1) {
-        requests.splice(requestIndex, 1);
-      }
+    // Delete the user from groupRequests collection after being added to the group
+    temp = String(groupId)
+    await groupRequests.deleteMany({ username: username, groupId: temp });
 
-      // update groupRequests.txt
-      fs.writeFile(requestsFile, JSON.stringify(requests, null, 2), "utf8", (err) => {
-        if (err) {
-          console.log("Error writing to accountRequests file");
-          return res.json({ error: "Failed to update requests file" });
-        }
+    console.log('User added to the group');
+    res.json({ success: true, message: "User added to the group" });
 
-        console.log(`${user.username} has joined the group ${user.groupId}`);
-      });
-    });
-  };
-
+  } catch (err) {
+    console.error('Error handling request:', err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;

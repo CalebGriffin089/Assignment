@@ -1,35 +1,35 @@
 const express = require("express");
-const fs = require("fs");
-const path = require("path");
+const { MongoClient } = require("mongodb");
 
 const router = express.Router();
+const url = "mongodb://localhost:27017";
+const dbName = "mydb";
 
-router.post("/", (req, res) => {
-  const requestsFile = path.join(__dirname, "../data/groupRequests.txt");
+router.post("/", async (req, res) => {
+  const groupId = parseInt(req.body.groupId);
+  
+  if (!groupId) {
+    return res.status(400).json({ error: "Missing groupId in request body" });
+  }
 
-  // Read groupRequests.txt
-  fs.readFile(requestsFile, "utf8", (err, data) => {
-    if (err) {
-      console.log("Error reading requests.txt");
-      return res.json({ error: "Internal server error (requests)" });
-    }
+  const client = new MongoClient(url);
 
-    let requests = [];
-    try {
-      requests = JSON.parse(data);
-    } catch (err) {
-      console.log("Error parsing requests.txt");
-      return res.json({ error: "Corrupted requests data" });
-    }
-    response = [];
-    for(let i =0; i<requests.length;i++){
-      if(parseInt(requests[i].groupId) == parseInt(req.body.groupId)){
-        response.push(requests[i]);
-      }
-    }
-    // Send all requests as a response
-    res.json({ response: response });
-  });
+  try {
+    await client.connect();
+    const db = client.db(dbName);
+    const groupRequestsCollection = db.collection("groupRequests");
+
+    const requests = await groupRequestsCollection
+      .find({ groupId: String(groupId) })
+      .toArray();
+    res.json({ response: requests });
+
+  } catch (err) {
+    console.error("Error fetching group requests:", err);
+    res.status(500).json({ error: "Internal server error" });
+  } finally {
+    await client.close();
+  }
 });
 
 module.exports = router;
