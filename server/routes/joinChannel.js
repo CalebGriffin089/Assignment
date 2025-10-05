@@ -1,6 +1,7 @@
+const { provideCheckNoChangesConfig } = require("@angular/core");
 const express = require("express");
 const router = express.Router();
-const { MongoClient } = require('mongodb');
+const { MongoClient, ObjectId } = require('mongodb');
 
 const url = 'mongodb://localhost:27017';
 const client = new MongoClient(url);
@@ -17,13 +18,13 @@ router.post("/", async (req, res) => {
 
     // Get the 'channels' collection
     const channelsCollection = db.collection('channels');
-
+    
     // Find the channel by name
-    const channel = await channelsCollection.findOne({ name: newChannel });
+    const channel = await channelsCollection.findOne({ _id: new ObjectId(newChannel._id) });
     if (!channel) {
       return res.json({ valid: false });
     }
-
+    console.log(channel)
     // Check if the user is banned
     if (channel.banned && channel.banned.includes(username)) {
       console.log(`User ${username} is banned from channel ${newChannel}`);
@@ -36,11 +37,11 @@ router.post("/", async (req, res) => {
       
       // Update the channel in the database
       await channelsCollection.updateOne(
-        { name: newChannel },
+        { name: newChannel.name },
         { $set: { members: channel.members } }
       );
     }
-
+    
     return res.json({ valid: true });
 
   } catch (err) {

@@ -2,6 +2,7 @@ import { Injectable, signal } from '@angular/core';
 import { Observable } from 'rxjs';
 import { io,Socket } from 'socket.io-client'
 import { HttpClient } from '@angular/common/http';
+import Peer from 'peerjs';
 
 interface Message {
   msg: string,
@@ -73,4 +74,51 @@ export class Sockets {
     this.socket.emit('rooms');
   }
 
+  on(eventName: string): Observable<any> {
+    console.log("EventNAe",eventName)
+    return new Observable(observer => {
+      this.socket.on(eventName, (data: any) => {
+        observer.next(data);
+      });
+
+      // Remove listener on unsubscribe
+      return () => {
+        this.socket.off(eventName);
+      };
+    });
+  }
+
+  // Optionally, add emit wrapper
+  emit(eventName: string, data: any): void {
+    console.log(eventName, data);
+    this.socket.emit(eventName, data);
+  }
+
+  listen<T>(eventName: string): Observable<T> {
+    return new Observable<T>((subscriber) => {
+      this.socket.on(eventName, (data: T) => {
+        subscriber.next(data);
+      });
+    });
+  }
+
+  // Optional cleanup
+  removeListener(eventName: string): void {
+    this.socket.off(eventName);
+  }
+
+
+  joinVideo(channelId: string, userId: string, peerId: string) {
+    this.socket.emit('join-video', { channelId, userId, peerId });
+  }
+
+  leaveVideo(channelId: string, userId: string, peerId: string) {
+    this.socket.emit('leave-video', { channelId, peerId });
+  }
+
+  onVideoPeers(): Observable<string[]> {
+    return new Observable((observer) =>{
+      this.socket.on('video-peers', (peers: string[]) => observer.next(peers))
+    })
+  }
 }

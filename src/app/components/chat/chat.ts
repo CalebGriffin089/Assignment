@@ -6,6 +6,10 @@ import { of } from 'rxjs';
 import { Sockets } from '../../services/sockets/sockets';
 import { ImguploadService } from '../../services/imgupload.service';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { CallService } from '../../services/video/video';
+import { ElementRef, ViewChild } from '@angular/core';
+import Peer, { MediaConnection } from 'peerjs';
+import { io } from 'socket.io-client';
 
 interface Message {
   msg: string,
@@ -33,7 +37,10 @@ interface Raw_Message {
 })
 
 export class Chat{
-  constructor(private router: Router, private httpService: HttpClient, private imguploadService:ImguploadService, private sanitizer: DomSanitizer) {}
+
+  @ViewChild('videoContainer') videoContainer: ElementRef | undefined; // Fixed typo from 'vidoContainer'
+
+  constructor(private router: Router, private httpService: HttpClient, private imguploadService:ImguploadService, private sanitizer: DomSanitizer, private callService: CallService) {}
   server = 'http://localhost:3000';
   private socketService = inject(Sockets)
   messageOut = signal<Message>({
@@ -57,14 +64,21 @@ export class Chat{
   members = [];
   requestsGroups: any[] = [];
   selectedMember = '';
-
   isAdmin = false;
   
+
+  socket = io(this.server); // Add this as a class member
+  peer: Peer | null = null;
+  localStream: MediaStream | null = null;
+  remoteVideos: { [peerId: string]: MediaStream } = {};
+  videoStarted = false;
+  peerConnections: { [peerId: string]: MediaConnection } = {};
 
   ngOnInit(){
     if(!localStorage.getItem("valid")){
       this.router.navigate(['/']);
     }
+
 
     let roles = localStorage.getItem('roles') || ""; // fallback to empty string
     let rolesArray = roles.split(","); // splits into ["admin", "user", "superAdmin"]
@@ -75,6 +89,13 @@ export class Chat{
     }else if (rolesArray.includes("superAdmin")) {
       this.isAdmin = true;
     }
+
+    const peer = new Peer('superAdmin', {
+      host: 'localhost',
+      port: 3000,
+      path: '/peerjs',
+      secure: false  // If not using HTTPS
+    });
 
     //get all groups the user is in
     this.httpService.post(`${this.server}/api/getGroups`, {username: localStorage.getItem('username')}).pipe(
@@ -431,13 +452,14 @@ export class Chat{
 
   //accept a rquest to join a group
   acceptGroup(username:string, groupId:string){
+    console.log(username, groupId);
     this.httpService.post(`${this.server}/api/acceptGroup`, { username: username, groupId: groupId}).pipe(
       catchError((error) => {
         console.error('Error during login:', error);
         return of(null);  // Return null if there is an error
       })
     ).subscribe(() => {});
-    window.location.reload();
+    // window.location.reload();
   }
 
   //decline a request to join a group
@@ -483,4 +505,111 @@ export class Chat{
       this.send();  // Send the message without image if no file selected
     }
   }
+
+
+  startVideoCall() {
+    if (!this.selectedChannel || !this.selectedChannel._id) {
+      alert('Select a channel to start video.');
+      return;
+    }
+
+    const username = localStorage.getItem('username') || 'unknown';
+    const channelId = this.selectedChannel._id;
+
+    this.callService.createPeer(username).then(peer => {
+      this.peer = peer;
+
+      // Get screen share stream (video only, no audio here)
+      navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(stream => {
+        this.localStream = stream;
+
+        const localVideo = document.getElementById('local-video') as HTMLVideoElement;
+        if (localVideo) {
+          localVideo.srcObject = stream;
+          localVideo.muted = true;
+          localVideo.play();
+        }
+
+        this.socketService.joinVideo(channelId, username, peer.id);
+        this.videoStarted = true;
+
+        // Answer incoming calls
+        peer.on('call', (call: MediaConnection) => {
+          call.answer(stream);
+          call.on('stream', remoteStream => this.addRemoteStream(call.peer, remoteStream));
+          call.on('close', () => this.removeRemoteStream(call.peer));
+          this.peerConnections[call.peer] = call;
+        });
+
+        // Listen for list of existing peers
+        this.socketService.on('video-peers').subscribe((peers: string[]) => {
+          peers.forEach(peerId => {
+            if (peerId !== peer.id && !this.peerConnections[peerId]) {
+              const call = peer.call(peerId, stream);
+              call.on('stream', remoteStream => this.addRemoteStream(peerId, remoteStream));
+              call.on('close', () => this.removeRemoteStream(peerId));
+              this.peerConnections[peerId] = call;
+            }
+          });
+        });
+
+        // New peer joined
+        this.socketService.on('new-video-peer').subscribe((peerId: string) => {
+          if (peerId !== peer.id && !this.peerConnections[peerId]) {
+            const call = peer.call(peerId, stream);
+            call.on('stream', remoteStream => this.addRemoteStream(peerId, remoteStream));
+            call.on('close', () => this.removeRemoteStream(peerId));
+            this.peerConnections[peerId] = call;
+          }
+        });
+
+        // Peer left
+        this.socketService.on('video-peer-left').subscribe((peerId: string) => {
+          this.removeRemoteStream(peerId);
+          if (this.peerConnections[peerId]) {
+            this.peerConnections[peerId].close();
+            delete this.peerConnections[peerId];
+          }
+        });
+
+        // Listen for when screen sharing ends to maybe stop the call or notify users
+        stream.getVideoTracks()[0].addEventListener('ended', () => {
+          alert('Screen sharing stopped.');
+          // Optional: You can stop call or switch back to camera here
+        });
+
+      }).catch(err => {
+        console.error('getDisplayMedia error', err);
+        alert('Could not access screen for sharing.');
+      });
+    });
+  }
+
+  addRemoteStream(peerId: string, stream: MediaStream) {
+    if (this.remoteVideos[peerId]) return;
+
+    const video = document.createElement('video');
+    video.id = `remote-video-${peerId}`;
+    video.srcObject = stream;
+    video.autoplay = true;
+    video.width = 200;
+    video.style.margin = '5px';
+
+    const container = this.videoContainer?.nativeElement;
+    if (container) {
+      container.appendChild(video);
+    }
+
+    this.remoteVideos[peerId] = stream;
+  }
+
+  removeRemoteStream(peerId: string) {
+    const video = document.getElementById(`remote-video-${peerId}`);
+    if (video) video.remove();
+    delete this.remoteVideos[peerId];
+  }
+
+  
 }
+
+
