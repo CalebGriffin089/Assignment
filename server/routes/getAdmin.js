@@ -36,6 +36,7 @@ router.post("/", async (req, res) => {
     const user = await usersCollection.findOne({ username });
     if (user && Array.isArray(user.roles) && user.roles.includes("superAdmin")) {
       isSuperAdmin = true;
+      isAdmin = true;
     }
 
     res.json({ isAdmin, isSuperAdmin });

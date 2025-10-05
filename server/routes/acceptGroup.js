@@ -29,11 +29,12 @@ router.post("/", async (req, res) => {
     
     groupId = parseInt(groupId);
     // Check if both user and group exist
-    if (!user) {
+    if (user == null) {
       console.log("User not found");
       return res.status(404).json({ success: false, message: "User not found" });
     }
-    if (!group) {
+
+    if (group == null) {
       console.log("Group not found");
       return res.status(404).json({ success: false, message: "Group not found" });
     }
@@ -41,11 +42,10 @@ router.post("/", async (req, res) => {
     // Check if the user is already in the group
     if (group.members && group.members.includes(username)) {
       temp = String(groupId)
-      console.log(await groupRequests.findOne({ username: username, groupId: temp }))
       await groupRequests.deleteMany({ username: username, groupId: temp });
       console.log("User already in the group");
       
-      return res.json({ success: true, message: "User is already in the group" });
+      return res.status(400).json({ success: false, message: "User is already in the group" });
     }
 
     // If user is not in group, add the user to the group
@@ -64,7 +64,7 @@ router.post("/", async (req, res) => {
 
     if (groupUpdateResult.modifiedCount === 0) {
       console.log("Failed to update the group");
-      return res.status(500).json({ success: false, message: "Failed to update the group" });
+      return res.status(400).json({ success: false, message: "Failed to update the group" });
     }
 
     // Optionally, you might want to add the group reference to the user document
@@ -76,7 +76,7 @@ router.post("/", async (req, res) => {
     if (userUpdateResult.modifiedCount === 0) {
       
       console.log("Failed to update the user");
-      return res.status(500).json({ success: false, message: "Failed to update the user" });
+      return res.status(400).json({ success: false, message: "Failed to update the user" });
     }
 
     // Delete the user from groupRequests collection after being added to the group

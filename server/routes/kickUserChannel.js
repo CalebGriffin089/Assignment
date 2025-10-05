@@ -7,7 +7,7 @@ const client = new MongoClient(url);
 const dbName = 'mydb';
 
 router.post("/", async (req, res) => {
-  const { id: username, currentChannel } = req.body;
+  const { username, currentChannel } = req.body;
 
   let db;
   try {
@@ -18,9 +18,8 @@ router.post("/", async (req, res) => {
     // Get collections
     const usersCollection = db.collection('users');
     const channelsCollection = db.collection('channels');
-
     // Fetch the user
-    const user = await usersCollection.findOne({ username });
+    const user = await usersCollection.findOne({ username: username });
     if (!user) {
       return res.status(404).json({ error: "User not found" });
     }

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { catchError } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { of } from 'rxjs';
 
 @Component({
@@ -28,8 +28,12 @@ export class JoinGroups{
     groupId: this.groupName
   }
 
-  this.httpService.post(`${this.server}/api/createGroupJoinRequest`, userData).pipe(
+  this.httpService.post(`${this.server}/api/groupRequest`, userData).pipe(
+    map((response: any) => {
+      alert(`A Join Request Has Sucessfully Been Sent to Group ${this.groupName}`)
+    }),
     catchError((error) => {
+      alert(error.error.error)
       console.error('Error during login:', error);
       return of(null);  // Return null if there is an error
     })

@@ -20,7 +20,6 @@ router.post("/", async (req, res) => {
 
     // Find the user by username
     const user = await usersCollection.findOne({ username: String(username) });
-    console.log("FILTERS",username);
     let groups = [];
 
     if (user) {
@@ -37,7 +36,7 @@ router.post("/", async (req, res) => {
       }
     }
 
-    res.json({ groups: filteredGroups });
+    return res.json({ groups: filteredGroups });
 
   } catch (err) {
     console.error("Error fetching user data:", err);

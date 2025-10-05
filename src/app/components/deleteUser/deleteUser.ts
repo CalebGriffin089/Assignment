@@ -31,23 +31,31 @@ export class DeleteUser {
   }
 
   deleteAccount(): void {
-    this.httpService.post(`${this.server}/api/delete`, { username: localStorage.getItem('username') }).pipe(
-      map((response: any) => {
-        if (response.success) {
-          this.router.navigate(['/']); // Redirect once account has been deleted
-        }
-      }),
-      catchError((error) => {
-        console.error('Error during deletion:', error);
-        return of(null);
-      })
-    ).subscribe();
-    localStorage.clear();
+    if(!this.isSuperAdmin){
+      this.httpService.post(`${this.server}/api/delete`, { username: localStorage.getItem('username') }).pipe(
+        map((response: any) => {
+          if (response.success) {
+            this.router.navigate(['/']); // Redirect once account has been deleted
+          }
+        }),
+        catchError((error) => {
+          console.error('Error during deletion:', error);
+          return of(null);
+        })
+      ).subscribe();
+      localStorage.clear();
+    }else{
+      alert("This Button Cannot Delete A superAdmin")
+    }
   }
 
   deleteAccountSuperAdmin(){
     this.httpService.post(`${this.server}/api/delete`, { username: this.userInput }).pipe(
+      map((response: any) => {
+          console.log(response.body)
+        }),
       catchError((error) => {
+        alert(error.error.message)
         console.error('Error during deletion:', error);
         return of(null); // Return null if there is an error
       })

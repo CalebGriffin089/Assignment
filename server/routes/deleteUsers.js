@@ -35,8 +35,8 @@ router.post("/", async (req, res) => {
     );
 
     await channelsCollection.updateMany(
-      { members: "1" },
-      { $pull: { members: "1" } }
+      { members: usernameToDelete },
+      { $pull: { members: usernameToDelete } }
     );
 
     console.log(`User ${usernameToDelete} deleted and removed from all groups`);

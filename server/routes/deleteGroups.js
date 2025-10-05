@@ -36,11 +36,10 @@ router.post("/", async (req, res) => {
     const channelIds = channelsToDelete.map(channel => String(channel.name)); // Assuming channel.id exists
     await messagesCollection.deleteMany({
       $and: [
-        { channel: { $in: ['1'] } },   // Message must be in the specified channels
+        { channel: { $in: [channelIds] } },   // Message must be in the specified channels
         { group: String('3') }   // Message must match the groupId
       ]
     });
-    console.log("GONE:",channelIds);
     // 4. Delete the channels themselves
     await channelsCollection.deleteMany({ groupId: String(groupIdToDelete) });
 

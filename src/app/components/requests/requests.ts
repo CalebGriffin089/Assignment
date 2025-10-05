@@ -89,10 +89,15 @@ export class Requests {
   onSubmitSuper(){
     this.httpService.post(`${this.server}/api/promoteSuperAdmin`, { username: this.userInput}).pipe(
       map((response: any) => {
-        console.log(response);
+        if(response.success){
+          alert('User Has Been Sucessfully Promoted To superAdmin ');
+        }else{
+          alert(response.message)
+        }
+        
       }),
       catchError((error) => {
-        console.error('Error during login:', error);
+        alert('There Has Been An Error');
         return of(null);  // Return null if there is an error
       })
     ).subscribe();

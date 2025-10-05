@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
     }
 
     console.log(`Deleted channel "${channel}" from group ${groupId}`);
-    res.json({ valid: true, message: `Channel ${channel} deleted successfully` });
+    res.json({ valid: true });
 
   } catch (err) {
     console.error("Error deleting channel:", err);

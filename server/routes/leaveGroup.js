@@ -46,13 +46,15 @@ router.post("/", async (req, res) => {
       
       return res.status(404).json({ success: false, message: "Group not found" });
     }
-    
+
     // Step 3: Remove the user from the group's members array
     const groupUpdateResult = await groupsCollection.updateOne(
       { id: parseInt(groupId) },
       { $pull: { members: name } }
     );
     
+    
+
     if (groupUpdateResult.modifiedCount === 0) {
           
       return res.status(404).json({ success: false, message: "User not found in group members" });
@@ -76,7 +78,7 @@ router.post("/", async (req, res) => {
     console.log(`Group ${groupId} removed from user ${name}'s groups`);
 
     // Step 6: Success response
-    res.json({ success: true, message: "User banned successfully" });
+    res.json({ success: true, message: "User left successfully" });
 
   } catch (error) {
     console.error("Error banning user from group:", error);

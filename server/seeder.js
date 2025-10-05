@@ -23,11 +23,14 @@ async function seedSuperUser() {
 
     // Seed super user
     const superUser = {
-      username: "superAdmin",  // Choose a username for your super user
-      password: "supersecretpassword",  // You should hash passwords before storing them in production!
-      roles: ["superAdmin"],  // Assign the superAdmin role
-      groups: [],  // Add any initial groups the super user is part of
-      createdAt: new Date(),
+      
+    username: "superAdmin",
+    profile: "http://localhost:3000/userImages/profile.jpg",
+    email: "2",
+    password: "supersecretpassword",
+    groups: [],
+    roles: ['superAdmin'],
+    profileImage: "image.webp"
     };
 
     // Insert the super user into the database

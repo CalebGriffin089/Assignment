@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "unitTest": "mocha ./unitTest/test.js",
+    "integrationTest": "mocha ./integrationTest/test.js"
   },
   "author": "",
   "license": "ISC",
@@ -13,5 +14,12 @@
     "express": "^5.1.0",
     "formidable": "^3.5.4",
     "socket.io": "^4.8.1"
+  },
+  "devDependencies": {
+    "chai": "^4.3.9",
+
+    "chai-http": "^4.4.0",
+
+    "mocha": "^10.2.0"
   }
 }

@@ -22,8 +22,7 @@ router.post("/", async (req, res) => {
     const requests = await groupRequestsCollection
       .find({ groupId: String(groupId) })
       .toArray();
-    res.json({ response: requests });
-
+    return res.json({ response: requests });
   } catch (err) {
     console.error("Error fetching group requests:", err);
     res.status(500).json({ error: "Internal server error" });

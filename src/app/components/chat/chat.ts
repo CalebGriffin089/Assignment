@@ -96,6 +96,45 @@ export class Chat{
     );
   }
 
+
+  hoveredMember: string | null = null;
+
+  onMemberEnter(member: string) {
+    this.hoveredMember = member;
+  }
+
+  onMemberLeave() {
+    this.hoveredMember = null;
+  }
+
+ hoverTimeout: any = null;
+ hoveredGroup: string | null = null;
+
+  onGroupEnter(group: string) {
+      if (this.hoverTimeout) {
+        clearTimeout(this.hoverTimeout);
+      }
+      this.hoveredGroup = group;
+    }
+
+    onGroupLeave() {
+      // Delay hiding the panel to avoid flicker when moving mouse fast
+      this.hoverTimeout = setTimeout(() => {
+        this.hoveredGroup = null;
+      }, 200); // 200ms delay - adjust as needed
+    }
+
+    hoveredChannel: any = null;
+
+  onChannelEnter(channel: any) {
+    this.hoveredChannel = channel;
+  }
+
+  onChannelLeave() {
+    this.hoveredChannel = null;
+  }
+
+
   setMessageOut(msg:string){
     let currentMessage = this.messageOut() 
     currentMessage.msg = msg
@@ -226,8 +265,10 @@ export class Chat{
   }
 
   getGroupRequests(){
+    
     this.httpService.post(`${this.server}/api/getGroupRequests`, { groupId: this.currentGroup }).pipe(
         map((response: any) => {
+            console.log(response)
             this.requestsGroups = response.response;
         }),
         catchError((error) => {
@@ -235,6 +276,7 @@ export class Chat{
           return of(null);  // Return null if there is an error
         })
       ).subscribe();
+      
   }
 
   selectGroup(selectedGroup: any) {
@@ -250,47 +292,49 @@ export class Chat{
     if(this.isAdmin){
       this.getGroupRequests();
     }
-
-    
-
-
   }
   
   selectMember(member: any){
     this.selectedMember = member;
   }
   
-  //NEEDS WORK
+
   banUser(){
-    this.httpService.post(`${this.server}/api/ban`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
-    map((response: any) => {
-      }),
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
+    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+      this.httpService.post(`${this.server}/api/ban`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
+      map((response: any) => {
+        }),
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+    }
   }
 
   
   leaveGroup(){
-    this.httpService.post(`${this.server}/api/leaveGroup`, {name: localStorage.getItem('username'), currentGroup: this.currentGroup}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
-    window.location.reload();
+    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+        this.httpService.post(`${this.server}/api/leaveGroup`, {name: localStorage.getItem('username'), currentGroup: this.currentGroup}).pipe(
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+      window.location.reload();
+    }
   }
 
   deleteGroup(){
-    this.httpService.post(`${this.server}/api/deleteGroups`, {groupId: this.currentGroup}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
-    window.location.reload();
+    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+      this.httpService.post(`${this.server}/api/deleteGroups`, {groupId: this.currentGroup}).pipe(
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+      window.location.reload();
+    }
   }
 
   addChannel(newChannel:string){
@@ -316,23 +360,27 @@ export class Chat{
   }
 
   deleteChannel(){
-    this.httpService.post(`${this.server}/api/deleteChannel`, {groupId: this.currentGroup, channel: this.selectedChannel}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
-    window.location.reload();
+    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+      this.httpService.post(`${this.server}/api/deleteChannel`, {groupId: this.currentGroup, channel: this.selectedChannel}).pipe(
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+      window.location.reload();
+    }
   }
 
   //ban the a member from the selected channel
   banUserChannel(){
-    this.httpService.post(`${this.server}/api/banUserChannel`, {currentGroup: this.currentGroup, user: this.selectedMember}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
+    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+      this.httpService.post(`${this.server}/api/banUserChannel`, {currentGroup: this.currentGroup, user: this.selectedMember}).pipe(
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+    }
   }
 
   //add a user to the selected channel
@@ -347,35 +395,41 @@ export class Chat{
 
   //kick a user from the selected channel
   removeUser(){
-    this.httpService.post(`${this.server}/api/kickUserChannel`, {id: this.selectedMember, currentChannel: this.selectedChannel}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
+    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+      this.httpService.post(`${this.server}/api/kickUserChannel`, {id: this.selectedMember, currentChannel: this.selectedChannel}).pipe(
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+    }
   }
 
   //kick a user from the current group
   removeUserGroups(){
-    this.httpService.post(`${this.server}/api/kickUserGroups`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
+    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+      this.httpService.post(`${this.server}/api/kickUserGroups`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+    }
   }
 
   //promote a user to a group admin
   promoteUser(){
-    this.httpService.post(`${this.server}/api/promoteUser`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
+    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+      this.httpService.post(`${this.server}/api/promoteUser`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+    }
   }
 
-  //accept a rrquest to join a group
+  //accept a rquest to join a group
   acceptGroup(username:string, groupId:string){
     this.httpService.post(`${this.server}/api/acceptGroup`, { username: username, groupId: groupId}).pipe(
       catchError((error) => {
@@ -399,6 +453,8 @@ export class Chat{
   onFileSelected(event:any){
     this.selectedfile = event.target.files[0];
   }
+
+
   onUpload(): void {
     const fd = new FormData();
     this.isLoading = true;  // Set loading state to true when uploading starts

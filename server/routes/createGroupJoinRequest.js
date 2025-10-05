@@ -31,7 +31,7 @@ router.post("/", async (req, res) => {
     // Check if the user is banned from the group
     const group = await groupsCollection.findOne({ id: parseInt(groupId) });
     
-    if (!group) {
+    if (group == null) {
       await client.close();
       return res.status(404).json({ error: "Group not found" });
     }
@@ -41,6 +41,12 @@ router.post("/", async (req, res) => {
       await client.close();
       return res.status(403).json({ error: "You are banned from this group" });
     }
+
+    if (group.members.includes(username)) {
+      await client.close();
+      return res.status(404).json({ error: "You are already in this group" });
+    }
+
 
     // Check if there's already a pending request for this user & group
     const existingRequest = await requestsCollection.findOne({
@@ -60,7 +66,7 @@ router.post("/", async (req, res) => {
     await client.close();
 
     console.log("Join group request submitted:", username, "for group:", groupId);
-    res.json({ valid: true });
+    return res.json({ valid: true });
   } catch (err) {
     console.error("Error handling join group request:", err);
     res.status(500).json({ error: "Internal server error" });

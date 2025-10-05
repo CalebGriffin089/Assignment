@@ -56,10 +56,10 @@ export class EditProfile {
       username: localStorage.getItem('username')
     }).pipe(
       map((response: any) => {
-        console.log(response);
+        alert('Profile updated successfully!');
       }),
       catchError((error) => {
-        console.error('Error during update:', error);
+        alert('There Has Been An Error');
         return of(null);
       })
     ).subscribe();

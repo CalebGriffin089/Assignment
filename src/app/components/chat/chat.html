@@ -4,200 +4,342 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>User Profile</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+  <style>
+    body {
+      background-color: #f4f7fb;
+    }
+    .card {
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .card-header {
+      background-color: #007bff;
+      color: white;
+      border-radius: 10px 10px 0 0;
+    }
+    .btn-custom {
+      border-radius: 30px;
+      padding: 10px 20px;
+      font-size: 14px;
+    }
+    .form-control, .input-group-text {
+      border-radius: 5px;
+    }
+    .upload-section img {
+      max-width: 100%;
+      border-radius: 10px;
+      object-fit: cover;
+    }
+    .message-content {
+      background-color: #f8f9fa;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 15px;
+    }
+    .message-content img {
+      max-width: 150px;
+      border-radius: 8px;
+      margin-top: 10px;
+    }
+    .btn-outline-dark {
+      border-radius: 30px;
+    }
+    .btn-outline-danger {
+      border-radius: 30px;
+    }
+    .btn-outline-success {
+      border-radius: 30px;
+    }
+    .input-group-text {
+      background-color: #007bff;
+      color: white;
+      font-weight: bold;
+    }
+    .chat-container {
+      max-height: 400px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+    }
+    /* Sidebar styles */
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      height: 100%;
+    }
+    .sidebar button {
+      margin-bottom: 10px;
+      width: 100%;
+    }
+    /* Move the whole page up */
+    .container {
+      margin-top: 20px;
+    }
+    /* Adjust the sidebar to be smaller */
+    .col-sidebar {
+      width: 18%;
+      padding-right: 10px;
+    }
+    /* Main content area */
+    .col-main {
+      width: 82%;
+    }
+    /* Admin Actions Section */
+    .admin-actions {
+      margin-top: 30px;
+    }
+    .message-form {
+      display: flex;
+      align-items: center;
+    }
+    .message-form input {
+      flex-grow: 1;
+      margin-right: 10px;
+    }
+    .message-form button {
+      min-width: 100px;
+    }
+    /* Hover effect for members */
+    .member-hover {
+      position: relative;
+    }
+    .admin-actions-hover {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 100%;
+      width: 300px;
+      background: #fff;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      border-radius: 10px;
+      z-index: 10;
+    }
+    .member-hover:hover .admin-actions-hover {
+      display: block;
+    }
+
+    .btn-selected {
+      background-color: #007bff !important;  /* Bootstrap primary blue */
+      color: white !important;
+      border-color: #007bff !important;
+      font-weight: bold;
+    }
+  </style>
 </head>
-<body class="bg-light">
+<body>
 
-  <div class="container my-5">
-    <div class="card shadow-lg p-4">
-      <h1 class="text-center mb-4">Messages</h1>
+<div class="container my-5">
+  <div class="row">
+    <!-- Left Sidebar for Groups, Channels, and Members -->
+    <div class="col-md-2 col-sidebar">
+      <!-- Groups Section -->
+      <div *ngIf="groups.length > 0" class="mb-4">
+        <h5 class="mb-3">Groups</h5>
+        <div class="d-flex flex-column gap-3">
+          <ng-container *ngFor="let group of groups">
+            <div class="group-hover-container" 
+     style="position: relative;"
+     (mouseenter)="onGroupEnter(group)" 
+     (mouseleave)="onGroupLeave()">
 
-      <div class="container">
-        <h1> File Upload</h1>
-        <form (ngSubmit)="onUpload()">
-  <div class="form-group">
-    <input 
-      type="file" 
-      class="form-control" 
-      (change)="onFileSelected($event)" 
-      name="uploadfile" 
-      id="uploadfile" />
+  <button
+    class="btn btn-outline-primary btn-custom"
+    (click)="selectGroup(group)">
+    {{ group }}
+  </button>
+
+  <div *ngIf="hoveredGroup === group"
+       class="group-hover-panel shadow p-3 bg-white rounded"
+       style="
+         position: absolute;
+         top: 0;
+         left: 100%;
+         margin-left: 5px;  /* reduce gap */
+         min-width: 220px;
+         z-index: 1000;
+       ">
+    <!-- Delete Group button only for admins -->
+    <button *ngIf="isAdmin" class="btn btn-danger btn-custom w-100 mb-2" (click)="deleteGroup()">
+      Delete Group: {{ group }}
+    </button>
+
+    <!-- Leave Group button visible to all -->
+    <button class="btn btn-warning btn-custom w-100 mb-3" (click)="leaveGroup()">
+      Leave Group: {{ group }}
+    </button>
+
+    <!-- Add Channel input and button (admins only) -->
+    <div *ngIf="isAdmin" class="input-group">
+      <input type="text" #newChannelInput class="form-control" placeholder="Enter channel name" />
+      <button class="btn btn-success btn-custom" (click)="addChannel(newChannelInput.value); newChannelInput.value=''">
+        Add Channel
+      </button>
+    </div>
   </div>
-  
-  <!-- Message input -->
-  <div class="input-group mb-4">
-    <input 
-    type="text" 
-    class="form-control" 
-    [(ngModel)]="messageOutMsg" 
-    name="messageOut" 
-    id="messageOut" 
-    placeholder="Type a message..."
-  />
-    <button class="btn btn-primary" type="submit">Send</button>
-  </div>
-</form>
+</div>
+          </ng-container>
+        </div>
       </div>
+      <!-- Channels Section -->
+      <div *ngIf="channels.length > 0" class="mb-4">
+          <h5 class="mb-3">Channels</h5>
+          <div class="d-flex flex-column gap-2">
+            <div *ngFor="let channel of channels"
+                class="channel-hover-container"
+                (mouseenter)="onChannelEnter(channel)"
+                (mouseleave)="onChannelLeave()"
+                style="position: relative;">
+              
+              <button
+                class="btn btn-outline-success btn-custom"
+                (click)="selectChannel(channel)"
+                [ngClass]="{'btn-selected': selectedChannel?.name === channel.name}">
+                {{ channel.name }}
+              </button>
 
-      
-
-      <!-- Received messages -->
-      <div *ngIf="messageIn().length > 0" class="mb-4">
-          <label class="fw-bold mb-2">Received:</label>
-          <div class="border rounded p-3 bg-white" style="max-height: 200px; overflow-y: auto;">
-            <div *ngFor="let msg of messageIn()">
-              <!-- Profile Image and Username -->
-              <div class="d-flex align-items-center mb-2">
-                <!-- Profile Image -->
-                <img *ngIf="msg.profileImage" [src]="getSanitizedUrl(msg.profileImage)" alt="Profile Image" 
-                    class="rounded-circle" style="width: 40px; height: 40px; object-fit: cover; margin-right: 10px;">        
-                
-                <!-- Username -->
-                <span class="fw-bold" style="margin-right: 10px;">
-                  
-                  {{ msg.username }}</span>
-                
-                <!-- Message Content -->
-                 <div class="alert alert-secondary py-2 mb-2" style="display: inline-block;">
-                    <p >{{ msg.msg }}</p>
-                    <div *ngIf="hasImage(msg.image)">
-                      <img [src]="getSanitizedUrl(msg.image)" alt="Received Image" 
-                          style="max-width: 150px; max-height: 150px; object-fit: cover; margin-top: 10px;">
-                    </div>
-                  </div>
+              <!-- Show hover panel only if hovered and channel is selected -->
+              <div *ngIf="hoveredChannel === channel && selectedChannel?.name === channel.name"
+                class="channel-hover-panel shadow p-3 bg-white rounded"
+                (mouseenter)="onChannelEnter(channel)"
+                (mouseleave)="onChannelLeave()"
+                style="
+                    position: absolute;
+                    top: 0;
+                    left: 100%;
+                    margin-left: 2px; /* Reduced margin */
+                    min-width: 150px;
+                    z-index: 1000;
+                ">
+                <button class="btn btn-danger btn-custom w-100" (click)="deleteChannel()">
+                  Delete
+                </button>
               </div>
             </div>
           </div>
         </div>
 
-
-      <!-- Groups -->
-      <div *ngIf="groups.length > 0" class="mb-4">
-        <label class="fw-bold mb-2">Groups:</label>
-        <div class="d-flex flex-wrap gap-2">
-          <button *ngFor="let group of groups; let i = index" 
-                  class="btn btn-outline-primary" 
-                  (click)="selectGroup(group)">
-            {{ group }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Channels -->
-      <div *ngIf="channels.length > 0" class="mb-4">
-        <label class="fw-bold mb-2">Channels:</label>
-        <div class="d-flex flex-wrap gap-2">
-          <button *ngFor="let channel of channels" (click)="selectChannel(channel)">
-            {{ channel.name }}
-          </button>
-        </div>
-        <p class="mt-2"><strong>Current Channel:</strong> {{ selectedChannel?.name }}</p>
-      </div>
-
-      <!-- Members -->
-      <div *ngIf="members.length > 0" class="mb-4">
-        <label class="fw-bold mb-2">Members:</label>
-        <div class="d-flex flex-wrap gap-2">
-          <button *ngFor="let member of members; let i = index" 
-                  class="btn btn-outline-dark" 
-                  (click)="selectMember(member)">
+      <!-- Members Section -->
+      <div *ngFor="let member of members" class="member-hover"
+            (mouseenter)="onMemberEnter(member)"
+            (mouseleave)="onMemberLeave()">
+          <button class="btn btn-outline-dark btn-custom" (click)="selectMember(member)">
             {{ member }}
           </button>
-        </div>
-      </div>
 
-      <!-- Leave Group -->
-      <div class="mb-4">
-        <label class="fw-bold mb-2">Leave Group:</label><br>
-        <button class="btn btn-danger" (click)="leaveGroup()">{{currentGroup}}</button>
-      </div>
+          <!-- Show hover panel if hoveredMember matches current member -->
+          <div *ngIf="isAdmin && hoveredMember === member" class="admin-actions-hover"
+            (mouseenter)="onMemberEnter(member)"
+            (mouseleave)="onMemberLeave()">
+            
+            <!-- Your full admin actions here, using {{member}} -->
+              <h5 class="mb-3">Ban "{{member}}" From {{currentGroup}}</h5>
+                <button class="btn btn-danger btn-custom w-100" (click)="banUser()">
+                  Ban
+                </button>
 
-      <!-- Admin actions -->
-      <div *ngIf="isAdmin" class="border-top pt-4 mt-4">
-        <h4 class="fw-bold mb-3">Admin Actions</h4>
+                <h5 class="mb-3">Remove "{{member}}" From {{currentGroup}}</h5>
+              <button class="btn btn-danger btn-custom w-100" (click)="removeUserGroups()">{{member}}</button>
 
-        <!-- Ban User -->
-        <div class="mb-3">
-          <label class="fw-bold mb-2">Ban User From Group:</label><br>
-          <button class="btn btn-danger" (click)="banUser()">{{selectedMember}}</button>
-        </div>
+            <div *ngIf="selectedChannel">
+              <h5 class="mb-3">Delete Channel</h5>
+              <button class="btn btn-danger btn-custom w-100" (click)="deleteChannel()">{{selectedChannel?.name}}</button>
+            </div>
+            <div *ngIf="selectedChannel">
+              <h5 class="mb-3">Ban "{{member}}" From {{selectedChannel.name}}</h5>
+              <button class="btn btn-warning btn-custom w-100" (click)="banUserChannel()">{{member}}</button>
+            </div>
 
-        <!-- Delete Group -->
-        <div class="mb-3">
-          <label class="fw-bold mb-2">Delete Group:</label><br>
-          <button class="btn btn-danger" (click)="deleteGroup()">{{currentGroup}}</button>
-        </div>
+            <div *ngIf="selectedChannel">
+              <h5 class="mb-3">Remove "{{member}}" From {{selectedChannel?.name}}</h5>
+              <button class="btn btn-warning btn-custom w-100" (click)="removeUser()">{{member}}</button>
+            </div>
 
-        <!-- Add Channel -->
-        <div class="input-group mb-3">
-          <input type="text"
-                #newChannel
-                name="newChannel" id="newChannel" 
-                class="form-control" 
-                placeholder="Enter channel name">
-          <button class="btn btn-success" (click)="addChannel(newChannel.value)">Add Channel</button>
-        </div>
 
-        <!-- Delete Channel -->
-        <div class="mb-3">
-          <label class="fw-bold mb-2">Delete Channel:</label><br>
-          <button class="btn btn-danger" (click)="deleteChannel()">{{ selectedChannel?.name }}</button>
-        </div>
+            <div *ngIf="selectedChannel">
+              <h5 class="mb-3">Add "{{member}}" To {{selectedChannel?.name}}</h5>
+              <button class="btn btn-success btn-custom w-100" (click)="addUser()">{{member}}</button>
+            </div>
 
-        <!-- Ban User from Channel -->
-        <div class="mb-3">
-          <label class="fw-bold mb-2">Ban User From Current Channel:</label><br>
-          <button class="btn btn-danger" (click)="banUserChannel()">{{selectedMember}}</button>
-        </div>
+            
 
-        <!-- Add User to Channel -->
-        <div class="mb-3">
-          <label class="fw-bold mb-2">Add User To Current Channel:</label><br>
-          <button class="btn btn-success" (click)="addUser()">{{selectedMember}}</button>
-        </div>
+            
 
-        <!-- Remove User from Channel -->
-        <div class="mb-3">
-          <label class="fw-bold mb-2">Remove User From Current Channel:</label><br>
-          <button class="btn btn-warning" (click)="removeUser()">{{selectedMember}}</button>
-        </div>
-
-        <!-- Remove User from Group -->
-        <div class="mb-3">
-          <label class="fw-bold mb-2">Remove User From Current Group:</label><br>
-          <button class="btn btn-danger" (click)="removeUserGroups()">{{selectedMember}}</button>
-        </div>
-
-        <!-- Promote User -->
-        <div class="mb-3">
-          <label class="fw-bold mb-2">Promote User To Admin:</label><br>
-          <button class="btn btn-success" (click)="promoteUser()">{{selectedMember}}</button>
-        </div>
-        
-        <!-- Group Join Requests -->
-        <div>
-          <label class="fw-bold mb-2">Group Join Requests:</label>
-          <div *ngIf="requestsGroups.length > 0">
-            <ul class="list-group">
-              <li *ngFor="let request of requestsGroups" class="list-group-item">
-                <p><strong>Username:</strong> {{ request.username }}</p>
-                <p><strong>Group:</strong> {{ request.groupId }}</p>
-                <p><strong>Status:</strong> {{ request.status }}</p>
-                <p><strong>Permission:</strong> {{ request.permission }}</p>
-                <p><strong>Need:</strong> {{ request.need }} </p>
-                <button class="btn btn-success" (click)="acceptGroup(request.username, request.groupId)">Accept</button>
-                <button class="btn btn-danger" (click)="decline(request.username, 'group')">Decline</button>
-                <hr>
-              </li>
-            </ul>
+            <h5 class="mb-3">Promote "{{member}}" To Admin</h5>
+            <button class="btn btn-success btn-custom w-100" (click)="promoteUser()">Promote {{member}} To Admin</button>
           </div>
+        </div>
 
-          <!-- Display a message if no requests are found -->
-          <div *ngIf="requestsGroups.length === 0">
-            <p>No Group Join requests available.</p>
+
+      <!-- Leave Group Section -->
+      <div class="mb-4" *ngIf="currentGroup">
+        <h5 class="mb-3">Leave Group</h5>
+        <button class="btn btn-danger btn-custom w-100" (click)="leaveGroup()">{{currentGroup}}</button>
+      </div>
+    </div>
+
+    <!-- Right Content for Profile, Messages, and Uploads -->
+    <div class="col-md-10 col-main">
+      <div class="card shadow-lg p-4">
+        <div class="card-header text-center">
+          <h1>Messages</h1>
+        </div>
+
+        <!-- Received Messages Section -->
+        <div *ngIf="messageIn().length > 0" class="mb-4">
+          <h5 class="mb-3">Received Messages</h5>
+          <div class="chat-container">
+            <div *ngFor="let msg of messageIn()">
+              <div class="d-flex align-items-center mb-3">
+                <img *ngIf="msg.profileImage" [src]="getSanitizedUrl(msg.profileImage)" alt="Profile Image" class="rounded-circle" style="width: 50px; height: 50px; object-fit: cover; margin-right: 10px;" />
+                <div>
+                  <strong>{{ msg.username }}</strong>
+                  <p class="message-content">{{ msg.msg }}</p>
+                  <div *ngIf="hasImage(msg.image)">
+                    <img [src]="getSanitizedUrl(msg.image)" alt="Received Image" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </div>
+
+        <!-- Upload Profile Picture and Send Message Section (Moved above Admin Actions) -->
+        <div class="card shadow-lg p-4 mt-4">
+          <div class="my-4">
+            <h4 class="mb-3">Upload Image</h4>
+            <form (ngSubmit)="onUpload()">
+              <div class="mb-3">
+                <input type="file" class="form-control" (change)="onFileSelected($event)" name="uploadfile" id="uploadfile" />
+              </div>
+              <div class="message-form">
+                <input type="text" class="form-control" [(ngModel)]="messageOutMsg" name="messageOut" placeholder="Type a message..." />
+                <button class="btn btn-primary btn-custom" type="submit">Send</button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Group Join Requests Section -->
+        <div *ngIf="isAdmin  && requestsGroups.length > 0" class="card shadow-lg p-4 mt-4">
+          <h4 class="mb-3">Group Join Requests</h4>
+          <ul class="list-group">
+            <li *ngFor="let request of requestsGroups" class="list-group-item">
+              <p><strong>Username:</strong> {{ request.username }}</p>
+              <p><strong>Group:</strong> {{ request.groupId }}</p>
+              <p><strong>Status:</strong> {{ request.status }}</p>
+              <p><strong>Permission:</strong> {{ request.permission }}</p>
+              <p><strong>Need:</strong> {{ request.need }}</p>
+              <button class="btn btn-success btn-custom me-2" (click)="acceptGroup(request.username, request.groupId)">Accept</button>
+              <button class="btn btn-danger btn-custom" (click)="decline(request.username, 'group')">Decline</button>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
   </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

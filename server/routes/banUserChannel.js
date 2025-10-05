@@ -34,7 +34,7 @@ router.post("/", async (req, res) => {
     // Find channel by groupId (assuming currentChannel is groupId)
     const channel = await channelsCollection.findOne({ groupId: String(currentGroup) });
     if (!channel) {
-      return res.status(404).json({ success: false, message: "Channel not found for the group" });
+      return res.status(404).json({ success: false, error: "Channel not found for the group" });
     }
 
     // Remove user from members array if present
