@@ -321,13 +321,14 @@ describe("/api/groupRequest", function () {
 
     it("should submit a join group request successfully", async function () {
         const groupsCollection = db.collection("groups");
-        const groupId = "1"; // Test with group ID '1'
+        const groupId = "45645"; // Test with group ID '1'
 
         // Insert a sample group into the collection
         await groupsCollection.insertOne({
             id: parseInt(groupId),
-            name: "Sample Group",
-            banned: [],
+            members: "Sample Group",
+            banned: ['dfhghdf'],
+
         });
 
         const res = await chai
