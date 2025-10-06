@@ -9,19 +9,22 @@ export class CallService {
   private localStream: MediaStream | null = null;
   private peers: { [peerId: string]: MediaConnection } = {};
 
-  async createPeer(userId: string): Promise<Peer> {
-    if (this.peer) return this.peer;
+ async createPeer(): Promise<Peer> {
+  // Return existing peer if still valid
+  if (this.peer && !this.peer.destroyed) return this.peer;
 
-    return new Promise((resolve, reject) => {
-      this.peer = new Peer(userId, {
+  return new Promise((resolve, reject) => {
+      // Create Peer with optional userId
+      this.peer = new Peer({
         host: 'localhost',
         port: 3001,
         path: '/peerjs',
         debug: 2
       });
 
-      this.peer.on('open', () => {
-        console.log('Peer connection open');
+      // PeerJS assigns an ID asynchronously
+      this.peer.on('open', (id: string) => {
+        console.log('Peer connection open. Assigned ID:', id);
         resolve(this.peer!);
       });
 

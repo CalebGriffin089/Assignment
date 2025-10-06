@@ -65,7 +65,7 @@ export class Chat{
   requestsGroups: any[] = [];
   selectedMember = '';
   isAdmin = false;
-  
+  oldPeerId = null
 
   socket = io(this.server); // Add this as a class member
   peer: Peer | null = null;
@@ -73,6 +73,7 @@ export class Chat{
   remoteVideos: { [peerId: string]: MediaStream } = {};
   videoStarted = false;
   peerConnections: { [peerId: string]: MediaConnection } = {};
+  isScreenSharing = true;
 
   ngOnInit(){
     if(!localStorage.getItem("valid")){
@@ -237,8 +238,10 @@ export class Chat{
     });
     this.imagepath = '';
     this.selectedfile = null;
-    const fileInput = document.getElementById('uploadfile') as HTMLInputElement;
-    fileInput.value = ''; // Reset file input field
+    const fileInput = document.querySelector('input[name="uploadfile"]') as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = '';
+    }
   }
 
   getChannels(selectedGroup: any) {
@@ -405,8 +408,9 @@ export class Chat{
   }
 
   //add a user to the selected channel
-  addUser(){
-    this.httpService.post(`${this.server}/api/joinChannel`, {username: this.selectedMember, newChannel: this.selectedChannel}).pipe(
+  addUser(test:any){
+    console.log(test)
+    this.httpService.post(`${this.server}/api/joinChannel`, {username: test, newChannel: this.selectedChannel}).pipe(
       catchError((error) => {
         console.error('Error during login:', error);
         return of(null);  // Return null if there is an error
@@ -472,42 +476,77 @@ export class Chat{
     ).subscribe(() => {});
     window.location.reload();
   }
-  onFileSelected(event:any){
-    this.selectedfile = event.target.files[0];
+
+  onFileSelected(event: any) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  // Optional: Validate file type
+  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+  if (!allowedTypes.includes(file.type)) {
+    alert('Only JPG, PNG, and WebP images are allowed.');
+    return;
   }
 
+  // Optional: Validate file size (< 5MB)
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    alert('File is too large. Maximum 5MB allowed.');
+    return;
+  }
 
-  onUpload(): void {
-    const fd = new FormData();
-    this.isLoading = true;  // Set loading state to true when uploading starts
+  this.selectedfile = file;
+  console.log('Selected file:', this.selectedfile);
+}
 
-    if (this.selectedfile != null) {
-      fd.append('image', this.selectedfile, this.selectedfile.name);
-      
-      // Upload the image
-      this.imguploadService.imgupload(fd).subscribe(
-        res => {
-          this.isLoading = false;  // Set loading state to false when upload finishes
-          this.imagepath = res.data.filename;
-          console.log('Image uploaded successfully', res);
+onUpload(): void {
+  if (!this.selectedfile) {
+    this.send(); // Send message without image
+    return;
+  }
 
-          // After upload, send the message
-          this.send();
-        },
-        error => {
-          this.isLoading = false;  // Reset loading state if upload fails
-          console.error('Image upload failed', error);
-          alert('Error uploading image. Please try again.');
-        }
-      );
-    } else {
-      this.isLoading = false;  // Reset loading state if no file is selected
-      this.send();  // Send the message without image if no file selected
+  const fd = new FormData();
+  fd.append('image', this.selectedfile, this.selectedfile.name);
+
+  this.isLoading = true;
+
+  this.imguploadService.imgupload(fd).subscribe({
+    next: (res: any) => {
+      this.isLoading = false;
+      this.imagepath = res.data.filename;
+      console.log('Image uploaded successfully:', res);
+
+      this.send(); // Send the message after upload
+    },
+    error: (err) => {
+      this.isLoading = false;
+      console.error('Image upload failed:', err);
+      alert('Error uploading image. Please try again.');
+    }
+  });
+}
+
+  async makeVideo(useCame: boolean){
+    if(useCame){
+      const camera = await navigator.mediaDevices.getUserMedia({ video: true });
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const combinedStream = new MediaStream([
+        ...camera.getVideoTracks(),
+        ...micStream.getAudioTracks()
+      ]);
+      return combinedStream
+    }else{
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const combinedStream = new MediaStream([
+        ...screenStream.getVideoTracks(),
+        ...micStream.getAudioTracks()
+      ]);
+      return combinedStream
     }
   }
 
-
-  startVideoCall() {
+  async startVideoCall(useCamera: boolean) {
     if (!this.selectedChannel || !this.selectedChannel._id) {
       alert('Select a channel to start video.');
       return;
@@ -515,72 +554,59 @@ export class Chat{
 
     const username = localStorage.getItem('username') || 'unknown';
     const channelId = this.selectedChannel._id;
+    // If we had a previous peer, destroy it first
+    if (this.peer) {
+        this.peer.destroy();
+        this.peer = null;
+        await new Promise(res => setTimeout(res, 100)); // 100ms to ensure server cleanup
+      }
 
-    this.callService.createPeer(username).then(peer => {
-      this.peer = peer;
+    // Create a new Peer every time
+    const peer = await this.callService.createPeer();
+    this.oldPeerId;
+    this.peer = peer;
 
-      // Get screen share stream (video only, no audio here)
-      navigator.mediaDevices.getDisplayMedia({ video: true, audio: true }).then(stream => {
-        this.localStream = stream;
+    // setup local stream...
+    const combinedStream = await this.makeVideo(useCamera)
 
-        const localVideo = document.getElementById('local-video') as HTMLVideoElement;
-        if (localVideo) {
-          localVideo.srcObject = stream;
-          localVideo.muted = true;
-          localVideo.play();
+    this.localStream = combinedStream;
+
+    const video = document.getElementById('local-video')
+    const localVideo = document.getElementById('local-video') as HTMLVideoElement;
+    
+
+    if (localVideo) {
+      localVideo.srcObject = combinedStream;
+      localVideo.muted = true;
+      await localVideo.play();
+    }
+
+    if (!video){
+      return
+    }else{
+      video.replaceWith(localVideo);
+    }
+
+    this.socketService.joinVideo(channelId, username, peer.id);
+    this.videoStarted = true;
+
+    // Answer incoming calls
+    peer.on('call', call => {
+      call.answer(combinedStream);
+      call.on('stream', remoteStream => this.addRemoteStream(call.peer, remoteStream));
+      call.on('close', () => this.removeRemoteStream(call.peer));
+      this.peerConnections[call.peer] = call;
+    });
+
+    // Listen for peers safely
+    this.socketService.on('video-peers').subscribe((peers: string[]) => {
+      peers.forEach((peerId: string) => {  // <-- add :string
+        if (peerId !== peer.id && !this.peerConnections[peerId]) {
+          const call = peer.call(peerId, combinedStream);
+          call.on('stream', (remoteStream: MediaStream) => this.addRemoteStream(peerId, remoteStream));
+          call.on('close', () => this.removeRemoteStream(peerId));
+          this.peerConnections[peerId] = call;
         }
-
-        this.socketService.joinVideo(channelId, username, peer.id);
-        this.videoStarted = true;
-
-        // Answer incoming calls
-        peer.on('call', (call: MediaConnection) => {
-          call.answer(stream);
-          call.on('stream', remoteStream => this.addRemoteStream(call.peer, remoteStream));
-          call.on('close', () => this.removeRemoteStream(call.peer));
-          this.peerConnections[call.peer] = call;
-        });
-
-        // Listen for list of existing peers
-        this.socketService.on('video-peers').subscribe((peers: string[]) => {
-          peers.forEach(peerId => {
-            if (peerId !== peer.id && !this.peerConnections[peerId]) {
-              const call = peer.call(peerId, stream);
-              call.on('stream', remoteStream => this.addRemoteStream(peerId, remoteStream));
-              call.on('close', () => this.removeRemoteStream(peerId));
-              this.peerConnections[peerId] = call;
-            }
-          });
-        });
-
-        // New peer joined
-        this.socketService.on('new-video-peer').subscribe((peerId: string) => {
-          if (peerId !== peer.id && !this.peerConnections[peerId]) {
-            const call = peer.call(peerId, stream);
-            call.on('stream', remoteStream => this.addRemoteStream(peerId, remoteStream));
-            call.on('close', () => this.removeRemoteStream(peerId));
-            this.peerConnections[peerId] = call;
-          }
-        });
-
-        // Peer left
-        this.socketService.on('video-peer-left').subscribe((peerId: string) => {
-          this.removeRemoteStream(peerId);
-          if (this.peerConnections[peerId]) {
-            this.peerConnections[peerId].close();
-            delete this.peerConnections[peerId];
-          }
-        });
-
-        // Listen for when screen sharing ends to maybe stop the call or notify users
-        stream.getVideoTracks()[0].addEventListener('ended', () => {
-          alert('Screen sharing stopped.');
-          // Optional: You can stop call or switch back to camera here
-        });
-
-      }).catch(err => {
-        console.error('getDisplayMedia error', err);
-        alert('Could not access screen for sharing.');
       });
     });
   }
@@ -592,8 +618,10 @@ export class Chat{
     video.id = `remote-video-${peerId}`;
     video.srcObject = stream;
     video.autoplay = true;
+    video.playsInline = true;
     video.width = 200;
     video.style.margin = '5px';
+    video.muted = false; // allow audio
 
     const container = this.videoContainer?.nativeElement;
     if (container) {
@@ -603,13 +631,66 @@ export class Chat{
     this.remoteVideos[peerId] = stream;
   }
 
+
+  leaveVideoCall() {
+  // Stop local stream tracks
+  if (this.localStream) {
+    this.localStream.getTracks().forEach(track => track.stop());
+    this.localStream = null;
+  }
+
+  // Clear local video element
+  const localVideo = document.getElementById('local-video') as HTMLVideoElement;
+  if (localVideo) {
+    localVideo.srcObject = null;
+  }
+
+  // Close all PeerJS connections
+  Object.keys(this.peerConnections).forEach(peerId => {
+    const conn = this.peerConnections[peerId];
+    if (conn) {
+      conn.close(); // closes the peer connection
+      delete this.peerConnections[peerId];
+    }
+  });
+
+  // Remove remote videos from container
+  Object.keys(this.remoteVideos).forEach(peerId => this.removeRemoteStream(peerId));
+
+  // Notify server that this user left the video call
+  if (this.selectedChannel && this.peer) {
+    const username = localStorage.getItem('username') || 'unknown';
+    this.socketService.leaveVideo(this.selectedChannel._id, username, this.peer.id);
+  }
+
+
+  this.videoStarted = false;
+}
+
   removeRemoteStream(peerId: string) {
     const video = document.getElementById(`remote-video-${peerId}`);
     if (video) video.remove();
     delete this.remoteVideos[peerId];
   }
 
-  
+
+
+  async toggleStream() {
+    if(this.isScreenSharing){
+        try{
+          const camera = await navigator.mediaDevices.getUserMedia({ video: true }) || null;
+          this.leaveVideoCall();
+          this.startVideoCall(true);
+          this.isScreenSharing = false
+        }catch(err){
+          alert("Camera Not Found or Access Denied");
+        }
+    }else{
+      this.leaveVideoCall();
+      this.startVideoCall(false);
+      this.isScreenSharing = true;
+    }
+  }
 }
 
 

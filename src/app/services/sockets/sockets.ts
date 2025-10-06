@@ -108,17 +108,35 @@ export class Sockets {
   }
 
 
-  joinVideo(channelId: string, userId: string, peerId: string) {
+ joinVideo(channelId: string, userId: string, peerId: string) {
     this.socket.emit('join-video', { channelId, userId, peerId });
   }
 
   leaveVideo(channelId: string, userId: string, peerId: string) {
-    this.socket.emit('leave-video', { channelId, peerId });
+    this.socket.emit('leave-video', { channelId, userId, peerId });
   }
 
-  onVideoPeers(): Observable<string[]> {
-    return new Observable((observer) =>{
-      this.socket.on('video-peers', (peers: string[]) => observer.next(peers))
-    })
+  onVideoPeers(): Observable<{ channelId: string; peers: string[] }> {
+    return new Observable(observer => {
+      this.socket.on('video-peers', (data: { channelId: string; peers: string[] }) => {
+        observer.next(data);
+      });
+    });
+  }
+
+  onNewVideoPeer(): Observable<{ channelId: string; peerId: string }> {
+    return new Observable(observer => {
+      this.socket.on('new-video-peer', (data: { channelId: string; peerId: string }) => {
+        observer.next(data);
+      });
+    });
+  }
+
+  onVideoPeerLeft(): Observable<{ channelId: string; peerId: string }> {
+    return new Observable(observer => {
+      this.socket.on('video-peer-left', (data: { channelId: string; peerId: string }) => {
+        observer.next(data);
+      });
+    });
   }
 }

@@ -24,7 +24,7 @@ router.post("/", async (req, res) => {
     if (!channel) {
       return res.json({ valid: false });
     }
-    console.log(channel)
+    console.log(username)
     // Check if the user is banned
     if (channel.banned && channel.banned.includes(username)) {
       console.log(`User ${username} is banned from channel ${newChannel}`);

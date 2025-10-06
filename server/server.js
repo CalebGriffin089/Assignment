@@ -70,19 +70,6 @@ sockets(io);
 const videoPeers = new Map();
 
 io.on('connection', (socket) => {
-  console.log(`User connected: ${socket.id}`);
-
-  socket.on('joinChannel', async ({ channelId, userId }) => {
-    // Your join channel logic here
-  });
-
-  socket.on('sendMessage', async ({ channelId, userId, message, imagePath }) => {
-    // Your send message logic here
-  });
-
-  socket.on('leaveChannel', ({ channelId, userId }) => {
-    // Your leave channel logic here
-  });
 
   socket.on('join-video', ({ channelId, userId, peerId }) => {
     console.log(`User joined video channel: ${channelId} with peerId: ${peerId}`);

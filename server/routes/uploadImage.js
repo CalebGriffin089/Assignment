@@ -6,57 +6,50 @@ const path = require("path");
 const router = express.Router();
 
 router.post("/", (req, res) => {
-  console.log("test");
-  var form = new formidable.IncomingForm();
-  
-  // Set the upload directory
+  const form = new formidable.IncomingForm();
   const uploadFolder = path.join(__dirname, "../userImages");
-  
   form.uploadDir = uploadFolder;
   form.keepExtensions = true;
 
-  form.parse(req, (err, fields, files) => {
-    // Log files to see its structure
-    console.log(files);
-
+  form.parse(req, async (err, fields, files) => {
     if (err) {
-      return res.status(400).json({
-        status: 'Fail',
-        message: 'There was an error parsing the files',
-        error: err,
-      });
+      return res.status(400).json({ status: "Fail", message: "Error parsing files", error: err });
     }
 
-    // Access the first file in the 'image' array
-    let file = files.image[0]; // files.image is an array, so we need the first element
-
-    // Check if file is properly uploaded
+    // Handle array or single file
+    let file = Array.isArray(files.image) ? files.image[0] : files.image;
     if (!file || !file.filepath) {
-      return res.status(400).json({
-        status: 'Fail',
-        message: 'File not uploaded correctly or missing in the request.',
-      });
+      return res.status(400).json({ status: "Fail", message: "File missing" });
     }
 
-    let oldpath = file.filepath;
-    let newpath = path.join(form.uploadDir, file.originalFilename);
+    const ext = path.extname(file.originalFilename || file.newFilename);
+    const base = path.basename(file.originalFilename || file.newFilename, ext);
+    const uniqueName = `${base}-${Date.now()}${ext}`;
+    const oldpath = file.filepath;
+    const newpath = path.join(uploadFolder, uniqueName);
 
-    fs.rename(oldpath, newpath, function (err) {
+    // Move file safely
+    fs.rename(oldpath, newpath, (err) => {
       if (err) {
-        return res.status(400).json({
-          status: 'Fail',
-          message: 'Error renaming the file',
-          error: err,
+        // Try fallback: copy and delete
+        fs.copyFile(oldpath, newpath, (copyErr) => {
+          if (copyErr) {
+            return res.status(500).json({ status: "Fail", message: "Error saving file", error: copyErr });
+          }
+          fs.unlink(oldpath, () => {}); // remove temp file
+          return res.json({
+            result: "OK",
+            data: { filename: uniqueName, size: file.size },
+            message: "Upload successful (copied fallback)"
+          });
+        });
+      } else {
+        return res.json({
+          result: "OK",
+          data: { filename: uniqueName, size: file.size },
+          message: "Upload successful"
         });
       }
-      
-      // Respond with success
-      res.send({
-        result: 'OK',
-        data: { 'filename': file.originalFilename, 'size': file.size },
-        numberOfImages: 1,
-        message: 'upload successful',
-      });
     });
   });
 });
