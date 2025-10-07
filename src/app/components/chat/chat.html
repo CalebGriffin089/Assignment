@@ -206,7 +206,7 @@
                     [ngClass]="{'btn-selected': selectedChannel?.name === channel.name}">
               {{ channel.name }}
             </button>
-            <div *ngIf="hoveredChannel === channel && selectedChannel?.name === channel.name"
+            <div *ngIf="hoveredChannel === channel && selectedChannel?.name === channel.name && isAdmin"
                  class="channel-hover-panel shadow p-3 bg-white rounded"
                  style="position: absolute; top: 0; left: 100%; margin-left: 2px; min-width: 150px; z-index: 1000;">
               <button class="btn btn-danger btn-custom w-100" (click)="deleteChannel()">Delete</button>
@@ -231,11 +231,6 @@
           <button class="btn btn-danger btn-custom w-100" (click)="removeUserGroups()">{{member}}</button>
 
           <div *ngIf="selectedChannel">
-            <h5 class="mb-3">Delete Channel</h5>
-            <button class="btn btn-danger btn-custom w-100" (click)="deleteChannel()">{{selectedChannel?.name}}</button>
-          </div>
-
-          <div *ngIf="selectedChannel">
             <h5 class="mb-3">Ban "{{member}}" From {{selectedChannel.name}}</h5>
             <button class="btn btn-warning btn-custom w-100" (click)="banUserChannel()">{{member}}</button>
           </div>
@@ -255,11 +250,6 @@
         </div>
       </div>
 
-      <!-- Leave Group -->
-      <div class="mb-4" *ngIf="currentGroup">
-        <h5 class="mb-3">Leave Group</h5>
-        <button class="btn btn-danger btn-custom w-100" (click)="leaveGroup()">{{currentGroup}}</button>
-      </div>
     </div>
 
     <!-- MIDDLE: MESSAGES -->
@@ -340,13 +330,15 @@
 
         <div #videoContainer style="display: flex; flex-wrap: wrap;"></div>
 
-        <!-- Start Video Button -->
+        <!-- Change Camera Button -->
         <div class="video-button-container text-center mt-3">
+          <button id="toggle-stream-btn" (click)="toggleStream()">
+              {{ isScreenSharing ? 'Share Camera' : 'Share Screen' }}
+            </button>
+
+            <!-- Start Video Button -->
           <button class="btn-start-video" (click)="startVideoCall(false)" *ngIf="!videoStarted">Start Video</button>
 
-           <button id="toggle-stream-btn" (click)="toggleStream()">
-    Share Camera
-  </button>
           <!-- Leave Video Button -->
           <button class="btn btn-danger btn-custom mt-2" 
                   (click)="leaveVideoCall()" 

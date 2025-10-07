@@ -3,9 +3,7 @@ import { Component, CSP_NONCE, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map } from 'rxjs/operators';
 import { of } from 'rxjs';
-import { Sockets } from '../../services/sockets/sockets';
 import { ImguploadService } from '../../services/imgupload.service';
-import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 
 @Component({
   selector: 'wditProfile',
@@ -22,8 +20,15 @@ export class EditProfile {
   constructor(
     private imguploadService: ImguploadService,
     private httpService: HttpClient,
-    private sanitizer: DomSanitizer
+    private router: Router
   ) {}
+
+  ngOnInit() {
+    if (!localStorage.getItem("valid")) {
+      this.router.navigate(['/']);
+    }
+  }
+
 
   onFileSelected(event: any) {
     this.selectedfile = event.target.files[0];

@@ -3,8 +3,6 @@ import { Sockets } from './sockets';
 import { HttpClient } from '@angular/common/http';
 import { of, Subject } from 'rxjs';
 
-// Import the real io function to spy on it
-import * as socketIoClient from 'socket.io-client';
 
 describe('Sockets Service', () => {
   let service: Sockets;

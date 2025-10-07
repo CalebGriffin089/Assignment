@@ -33,6 +33,7 @@ interface Raw_Message {
 @Component({
   selector: 'chat',
   templateUrl: './chat.html',
+  styleUrls: ['./chat.css'],
   standalone: false,
 })
 
@@ -75,56 +76,52 @@ export class Chat{
   peerConnections: { [peerId: string]: MediaConnection } = {};
   isScreenSharing = true;
 
+  // when the page loads
   ngOnInit(){
     if(!localStorage.getItem("valid")){
       this.router.navigate(['/']);
-    }
+    }else{
 
+      let roles = localStorage.getItem('roles') || ""; // fallback to empty string
+      let rolesArray = roles.split(","); // splits into ["admin", "user", "superAdmin"]
 
-    let roles = localStorage.getItem('roles') || ""; // fallback to empty string
-    let rolesArray = roles.split(","); // splits into ["admin", "user", "superAdmin"]
-
-    // Example check if admin exists
-    if (rolesArray.includes("admin")) {
-      this.isAdmin = true;
-    }else if (rolesArray.includes("superAdmin")) {
-      this.isAdmin = true;
-    }
-
-    const peer = new Peer('superAdmin', {
-      host: 'localhost',
-      port: 3000,
-      path: '/peerjs',
-      secure: false  // If not using HTTPS
-    });
-
-    //get all groups the user is in
-    this.httpService.post(`${this.server}/api/getGroups`, {username: localStorage.getItem('username')}).pipe(
-    map((response: any) => {
-        //set this.groups so they can be displayed
-        this.groups = response.groups;
-        localStorage.setItem('groups', response.groups);
-      }),
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe();
-
-    this.socketService.onMessage().subscribe(
-      (msg) =>{
-        this.messageIn.update((msgs)=>[...msgs, msg])
+      // Example check if admin exists
+      if (rolesArray.includes("admin")) {
+        this.isAdmin = true;
+      }else if (rolesArray.includes("superAdmin")) {
+        this.isAdmin = true;
       }
-    );
+
+      //get all groups the user is in
+      this.httpService.post(`${this.server}/api/getGroups`, {username: localStorage.getItem('username')}).pipe(
+      map((response: any) => {
+          //set this.groups so they can be displayed
+          this.groups = response.groups;
+          localStorage.setItem('groups', response.groups);
+        }),
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe();
+
+      this.socketService.onMessage().subscribe(
+        (msg) =>{
+          this.messageIn.update((msgs)=>[...msgs, msg])
+        }
+      );
+    }
   }
 
 
   hoveredMember: string | null = null;
 
+  // displays the hover section for users (admin only)
   onMemberEnter(member: string) {
     this.hoveredMember = member;
   }
 
+  // removes the hover section for users (admin only)
   onMemberLeave() {
     this.hoveredMember = null;
   }
@@ -132,48 +129,52 @@ export class Chat{
  hoverTimeout: any = null;
  hoveredGroup: string | null = null;
 
+  // dispalys the hover section for groups  
   onGroupEnter(group: string) {
-      if (this.hoverTimeout) {
-        clearTimeout(this.hoverTimeout);
-      }
-      this.hoveredGroup = group;
+    if (this.hoverTimeout) {
+      clearTimeout(this.hoverTimeout);
     }
+    this.hoveredGroup = group;
+  }
 
-    onGroupLeave() {
-      // Delay hiding the panel to avoid flicker when moving mouse fast
-      this.hoverTimeout = setTimeout(() => {
-        this.hoveredGroup = null;
-      }, 200); // 200ms delay - adjust as needed
-    }
+  // removes the  hover display for groups
+  onGroupLeave() {
+    this.hoverTimeout = setTimeout(() => {
+      this.hoveredGroup = null;
+    }, 200); 
+  }
 
-    hoveredChannel: any = null;
-
+  hoveredChannel: any = null;
+  // when the cursor hovers on the channel
   onChannelEnter(channel: any) {
     this.hoveredChannel = channel;
   }
 
+  // when someones cursor leaves a channnel remove the hover section for it
   onChannelLeave() {
     this.hoveredChannel = null;
   }
 
-
+  // updates the value of the message signal
   setMessageOut(msg:string){
     let currentMessage = this.messageOut() 
     currentMessage.msg = msg
     this.messageOut.set(currentMessage) 
   }
 
+  // resets the message input field
  get messageOutMsg(): string {
     return this.messageOut().msg; // Access msg property from the signal
   }
 
+  // Sets the message to be sent by calling setMessageOut
   set messageOutMsg(msg: string) {
-    this.setMessageOut(msg); // Use the setMessageOut function to update the signal
+    this.setMessageOut(msg); 
   }
 
   
 
-
+  // joins a channel in a group
   selectChannel(selectedChannel: any) {
     let username = localStorage.getItem('username') || '' 
     let oldChannel = this.selectedChannel;
@@ -203,6 +204,7 @@ export class Chat{
 
   }
 
+  // ccheck if the message has an image
   hasImage(url: string){
     let urlSplit = url.split("http://localhost:3000/userImages/")
     if(urlSplit[1] == ''){
@@ -212,16 +214,19 @@ export class Chat{
     }
   }
 
+  // spli the message via the image url to display the message then the image
   splitMsg(msg:any, pos:any){
     let msgSplit = msg.split('http://localhost:3000/userImages/');
     return msgSplit[pos]
   }
 
+  // sanatize image urls before displaying them
   getSanitizedUrl(url: string): SafeUrl {
     let urlSplit = url.split("http://localhost:3000/userImages/")
     return this.sanitizer.bypassSecurityTrustUrl('http://localhost:3000/userImages/' + urlSplit[1]);
   }
 
+  // send a message to the channel it will alwayas send a base url to an image location
   send(){
     const imageUrl = "http://localhost:3000/userImages/" + encodeURIComponent(this.imagepath);
     const currentMessage = this.messageOut();
@@ -244,25 +249,26 @@ export class Chat{
     }
   }
 
+  // gets all channnels for the selected group
   getChannels(selectedGroup: any) {
-  this.httpService.post(`${this.server}/api/getChannels`, {
-    groupId: selectedGroup,
-    username: localStorage.getItem('username')
-  }).pipe(
-    map((response: any) => {
-      this.channels = response.channels;  // array of objects with _id and name
-      this.members = response.members
+    this.httpService.post(`${this.server}/api/getChannels`, {
+      groupId: selectedGroup,
+      username: localStorage.getItem('username')
+    }).pipe(
+      map((response: any) => {
+        this.channels = response.channels;  // array of objects with _id and name
+        this.members = response.members
 
-      // Save only the channel names or IDs if you want strings in localStorage
-      localStorage.setItem('channels', JSON.stringify(response.channels)); 
-      localStorage.setItem('members', JSON.stringify(response.members));
-    }),
-    catchError((error) => {
-      console.error('Error during login:', error);
-      return of(null);
-    })
-  ).subscribe();
-}
+        // Save only the channel names or IDs if you want strings in localStorage
+        localStorage.setItem('channels', JSON.stringify(response.channels)); 
+        localStorage.setItem('members', JSON.stringify(response.members));
+      }),
+      catchError((error) => {
+        console.error('Error during login:', error);
+        return of(null);
+      })
+    ).subscribe();
+  }
 
   //checks if the user is an admin in the current group
   checkAdmin(selectedGroup: any){
@@ -288,8 +294,8 @@ export class Chat{
     ).subscribe();
   }
 
+  // gets all join requests for the group
   getGroupRequests(){
-    
     this.httpService.post(`${this.server}/api/getGroupRequests`, { groupId: this.currentGroup }).pipe(
         map((response: any) => {
             console.log(response)
@@ -303,6 +309,7 @@ export class Chat{
       
   }
 
+  // gets the selected group and gets the channels to display
   selectGroup(selectedGroup: any) {
     this.currentGroup = selectedGroup;
 
@@ -318,11 +325,12 @@ export class Chat{
     }
   }
   
+  // gets the selected member
   selectMember(member: any){
     this.selectedMember = member;
   }
   
-
+  // bans the user from the group 
   banUser(){
     if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
       this.httpService.post(`${this.server}/api/ban`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
@@ -336,7 +344,7 @@ export class Chat{
     }
   }
 
-  
+  // leaves the user from the group
   leaveGroup(){
     if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
         this.httpService.post(`${this.server}/api/leaveGroup`, {name: localStorage.getItem('username'), currentGroup: this.currentGroup}).pipe(
@@ -349,8 +357,9 @@ export class Chat{
     }
   }
 
+  // deletes the group
   deleteGroup(){
-    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+    if(confirm(`Are you sure you want to delete the group: ${this.currentGroup}?`)){
       this.httpService.post(`${this.server}/api/deleteGroups`, {groupId: this.currentGroup}).pipe(
         catchError((error) => {
           console.error('Error during login:', error);
@@ -361,11 +370,10 @@ export class Chat{
     }
   }
 
+  // add a channel to a group
   addChannel(newChannel:string){
-    //update the group text file
-    
 
-    //update the channel text file
+    //create the channel
     this.httpService.post(`${this.server}/api/createChannel`, {groupId: this.currentGroup, name: newChannel, members: localStorage.getItem("username")}).pipe(
       catchError((error) => {
         console.error('Error during login:', error);
@@ -373,6 +381,7 @@ export class Chat{
       })
     ).subscribe();
 
+    // add the channel to the group
     this.httpService.post(`${this.server}/api/addChannel`, {groupId: this.currentGroup, newChannels: newChannel, username: localStorage.getItem("username")}).pipe(
       catchError((error) => {
         console.error('Error during login:', error);
@@ -383,8 +392,9 @@ export class Chat{
     window.location.reload();
   }
 
+  // delete a channel 
   deleteChannel(){
-    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+    if(confirm(`Are you sure you want to delete this channel the group: ${this.currentGroup}?`)){
       this.httpService.post(`${this.server}/api/deleteChannel`, {groupId: this.currentGroup, channel: this.selectedChannel}).pipe(
         catchError((error) => {
           console.error('Error during login:', error);
@@ -397,7 +407,7 @@ export class Chat{
 
   //ban the a member from the selected channel
   banUserChannel(){
-    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+    if(confirm(`Are you sure you want to ban this user from the group: ${this.currentGroup}?`)){
       this.httpService.post(`${this.server}/api/banUserChannel`, {currentGroup: this.currentGroup, user: this.selectedMember}).pipe(
         catchError((error) => {
           console.error('Error during login:', error);
@@ -463,69 +473,70 @@ export class Chat{
         return of(null);  // Return null if there is an error
       })
     ).subscribe(() => {});
-    // window.location.reload();
-  }
-
-  //decline a request to join a group
-  decline(username:string, file:string){
-    this.httpService.post(`${this.server}/api/decline`, { username: username, file}).pipe(
-      catchError((error) => {
-        console.error('Error during login:', error);
-        return of(null);  // Return null if there is an error
-      })
-    ).subscribe(() => {});
     window.location.reload();
   }
 
-  onFileSelected(event: any) {
-  const file = event.target.files[0];
-  if (!file) return;
-
-  // Optional: Validate file type
-  const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
-  if (!allowedTypes.includes(file.type)) {
-    alert('Only JPG, PNG, and WebP images are allowed.');
-    return;
-  }
-
-  // Optional: Validate file size (< 5MB)
-  const maxSize = 5 * 1024 * 1024;
-  if (file.size > maxSize) {
-    alert('File is too large. Maximum 5MB allowed.');
-    return;
-  }
-
-  this.selectedfile = file;
-  console.log('Selected file:', this.selectedfile);
-}
-
-onUpload(): void {
-  if (!this.selectedfile) {
-    this.send(); // Send message without image
-    return;
-  }
-
-  const fd = new FormData();
-  fd.append('image', this.selectedfile, this.selectedfile.name);
-
-  this.isLoading = true;
-
-  this.imguploadService.imgupload(fd).subscribe({
-    next: (res: any) => {
-      this.isLoading = false;
-      this.imagepath = res.data.filename;
-      console.log('Image uploaded successfully:', res);
-
-      this.send(); // Send the message after upload
-    },
-    error: (err) => {
-      this.isLoading = false;
-      console.error('Image upload failed:', err);
-      alert('Error uploading image. Please try again.');
+    //decline a request to join a group
+    decline(username:string, file:string){
+      this.httpService.post(`${this.server}/api/decline`, { username: username, file}).pipe(
+        catchError((error) => {
+          console.error('Error during login:', error);
+          return of(null);  // Return null if there is an error
+        })
+      ).subscribe(() => {});
+      window.location.reload();
     }
-  });
-}
 
+    onFileSelected(event: any) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    // Optional: Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Only JPG, PNG, and WebP images are allowed.');
+      return;
+    }
+
+    // Optional: Validate file size (< 5MB)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('File is too large. Maximum 5MB allowed.');
+      return;
+    }
+
+    this.selectedfile = file;
+    console.log('Selected file:', this.selectedfile);
+  }
+
+  // uplaod an image
+  onUpload(): void {
+    if (!this.selectedfile) {
+      this.send(); // Send message without image
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append('image', this.selectedfile, this.selectedfile.name);
+
+    this.isLoading = true;
+
+    this.imguploadService.imgupload(fd).subscribe({
+      next: (res: any) => {
+        this.isLoading = false;
+        this.imagepath = res.data.filename;
+        console.log('Image uploaded successfully:', res);
+
+        this.send(); // Send the message after upload
+      },
+      error: (err) => {
+        this.isLoading = false;
+        console.error('Image upload failed:', err);
+        alert('Error uploading image. Please try again.');
+      }
+    });
+  }
+  // make the call either share your screen or camera with audio
   async makeVideo(useCame: boolean){
     if(useCame){
       const camera = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -536,7 +547,7 @@ onUpload(): void {
       ]);
       return combinedStream
     }else{
-      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
       const micStream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const combinedStream = new MediaStream([
         ...screenStream.getVideoTracks(),
@@ -546,6 +557,7 @@ onUpload(): void {
     }
   }
 
+  // join the call
   async startVideoCall(useCamera: boolean) {
     if (!this.selectedChannel || !this.selectedChannel._id) {
       alert('Select a channel to start video.');
@@ -566,7 +578,7 @@ onUpload(): void {
     this.oldPeerId;
     this.peer = peer;
 
-    // setup local stream...
+    // setup local stream
     const combinedStream = await this.makeVideo(useCamera)
 
     this.localStream = combinedStream;
@@ -611,6 +623,7 @@ onUpload(): void {
     });
   }
 
+  // add a remote users video oo the stream and display it
   addRemoteStream(peerId: string, stream: MediaStream) {
     if (this.remoteVideos[peerId]) return;
 
@@ -633,40 +646,41 @@ onUpload(): void {
 
 
   leaveVideoCall() {
-  // Stop local stream tracks
-  if (this.localStream) {
-    this.localStream.getTracks().forEach(track => track.stop());
-    this.localStream = null;
-  }
-
-  // Clear local video element
-  const localVideo = document.getElementById('local-video') as HTMLVideoElement;
-  if (localVideo) {
-    localVideo.srcObject = null;
-  }
-
-  // Close all PeerJS connections
-  Object.keys(this.peerConnections).forEach(peerId => {
-    const conn = this.peerConnections[peerId];
-    if (conn) {
-      conn.close(); // closes the peer connection
-      delete this.peerConnections[peerId];
+    // Stop local stream tracks
+    if (this.localStream) {
+      this.localStream.getTracks().forEach(track => track.stop());
+      this.localStream = null;
     }
-  });
 
-  // Remove remote videos from container
-  Object.keys(this.remoteVideos).forEach(peerId => this.removeRemoteStream(peerId));
+    // Clear local video element
+    const localVideo = document.getElementById('local-video') as HTMLVideoElement;
+    if (localVideo) {
+      localVideo.srcObject = null;
+    }
 
-  // Notify server that this user left the video call
-  if (this.selectedChannel && this.peer) {
-    const username = localStorage.getItem('username') || 'unknown';
-    this.socketService.leaveVideo(this.selectedChannel._id, username, this.peer.id);
+    // Close all PeerJS connections
+    Object.keys(this.peerConnections).forEach(peerId => {
+      const conn = this.peerConnections[peerId];
+      if (conn) {
+        conn.close(); // closes the peer connection
+        delete this.peerConnections[peerId];
+      }
+    });
+
+    // Remove remote videos from container
+    Object.keys(this.remoteVideos).forEach(peerId => this.removeRemoteStream(peerId));
+
+    // Notify server that this user left the video call
+    if (this.selectedChannel && this.peer) {
+      const username = localStorage.getItem('username') || 'unknown';
+      this.socketService.leaveVideo(this.selectedChannel._id, username, this.peer.id);
+    }
+
+
+    this.videoStarted = false;
   }
 
-
-  this.videoStarted = false;
-}
-
+  // remove video from the html
   removeRemoteStream(peerId: string) {
     const video = document.getElementById(`remote-video-${peerId}`);
     if (video) video.remove();
@@ -674,7 +688,7 @@ onUpload(): void {
   }
 
 
-
+  // change the stream (camera or sharing screen)
   async toggleStream() {
     if(this.isScreenSharing){
         try{
@@ -692,5 +706,3 @@ onUpload(): void {
     }
   }
 }
-
-

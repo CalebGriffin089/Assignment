@@ -1,0 +1,142 @@
+
+body {
+    background-color: #f4f7fb;
+}
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.card-header {
+    background-color: #007bff;
+    color: white;
+    border-radius: 10px 10px 0 0;
+}
+.btn-custom {
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-size: 14px;
+}
+.form-control, .input-group-text {
+    border-radius: 5px;
+}
+.upload-section img {
+    max-width: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+}
+.message-content {
+    background-color: #f8f9fa;
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+.message-content img {
+    max-width: 150px;
+    border-radius: 8px;
+    margin-top: 10px;
+}
+.btn-outline-dark,
+.btn-outline-danger,
+.btn-outline-success {
+    border-radius: 30px;
+}
+.input-group-text {
+    background-color: #007bff;
+    color: white;
+    font-weight: bold;
+}
+.chat-container {
+    max-height: 400px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+/* Sidebar styles */
+.sidebar {
+    position: sticky;
+    top: 20px;
+    height: 100%;
+}
+.sidebar button {
+    margin-bottom: 10px;
+    width: 100%;
+}
+.container {
+    margin-top: 20px;
+}
+
+/* Column widths */
+.col-sidebar {
+    width: 18%;
+    padding-right: 10px;
+}
+.col-main {
+    width: 64%;
+}
+.video-sidebar {
+    width: 18%;
+    position: sticky;
+    top: 20px;
+    height: fit-content;
+    background: #ffffff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Hover effect for members */
+.member-hover {
+    position: relative;
+}
+.admin-actions-hover {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    width: 300px;
+    background: #fff;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    border-radius: 10px;
+    z-index: 10;
+}
+.member-hover:hover .admin-actions-hover {
+    display: block;
+}
+
+.btn-selected {
+    background-color: #007bff !important;
+    color: white !important;
+    border-color: #007bff !important;
+    font-weight: bold;
+}
+
+/* Video section */
+.video-container {
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    background-color: #ffffff;
+}
+.video-container video {
+    width: 100%;
+    border-radius: 10px;
+    object-fit: cover;
+}
+.video-button-container {
+    text-align: center;
+    margin-top: 15px;
+}
+.btn-start-video {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 14px;
+    border: none;
+    transition: 0.3s;
+}
+.btn-start-video:hover {
+    background-color: #0056b3;
+}

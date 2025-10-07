@@ -6,7 +6,10 @@
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",
-    "test": "ng test"
+    "test": "ng test",
+    "e2e": "ng e2e",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run"
   },
   "prettier": {
     "overrides": [
@@ -37,6 +40,7 @@
     "@angular/build": "^20.1.3",
     "@angular/cli": "^20.1.3",
     "@angular/compiler-cli": "^20.1.0",
+    "@cypress/schematic": "^4.1.4",
     "@types/jasmine": "~5.1.0",
     "chai": "^6.2.0",
     "chai-http": "^5.1.2",

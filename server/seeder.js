@@ -27,10 +27,10 @@ async function seedSuperUser() {
     username: "superAdmin",
     profile: "http://localhost:3000/userImages/profile.jpg",
     email: "2",
-    password: "supersecretpassword",
+    password: "123456",
     groups: [],
     roles: ['superAdmin'],
-    profileImage: "image.webp"
+    profileImage: "profile.jpg"
     };
 
     // Insert the super user into the database
