@@ -332,7 +332,7 @@ export class Chat{
   
   // bans the user from the group 
   banUser(){
-    if(confirm(`Are you sure you want to leave the group: ${this.currentGroup}?`)){
+    if(confirm(`Are you sure you want to ban the user from: ${this.currentGroup}?`)){
       this.httpService.post(`${this.server}/api/ban`, {id: this.selectedMember, currentGroup: this.currentGroup}).pipe(
       map((response: any) => {
         }),

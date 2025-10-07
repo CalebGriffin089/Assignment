@@ -1,72 +1,75 @@
-# File formats:
+# Collection Formats:
 All files are stored as JSON arrays with example below
-## accountRequests.txt:
-[
-  {
-    "username": " username ",
-    "email": " email ",
-    "password": " password "
-  }
-]
-## Channels.txt:
-[
-  {
-    "id": id,
-    "groupId": “groupId “,
-    "name": " name ",
-    "admins": [
-      "admin"
-    ],
-    "banned": [
-      "bannedUser"
-    ],
-    "members": [
-      "member"
-    ]
-  }
-]
+## accountRequests Collection:
 
-## groupRequests.txt:
-[
-  {
-    "username": "username ",
-    "groupId": "groupId",
-    "status": " status ",
-    "permission": "permission ",
-    "need": "need”
-  }
-]
-## Groups.txt
-[
-  {
-    "id": id,
-    "channels": [
-      "channel"
+-   "_id": mongoId,
+-   "username": " username ",
+-   "email": " email ",
+-   "password": " password "
+
+## Channels Collection:
+
+-   "_id": mongoId,
+-   "id": id,
+-   "groupId": “groupId “,
+-   "name": " name ",
+-   "admins": [
+        "admin"
     ],
-    "admins": [
-      "admin"
+-   "banned": [
+        "bannedUser"
     ],
-    "banned": [],
-    "members": [
-      " member"
+-   "members": [
+       "member"
     ]
-  }
-]
 
 
-## Users.txt:
-[
-  {
-    "id": id,
-    "username": "username",
-    "email": " email ",
-    "password": " password ",
-    "groups": [],
-    "roles": [
-      "user"
+## groupRequests Collection:
+-   "_id": mongoId
+-   "username": "username ",
+-   "groupId": "groupId",
+-   "status": " status ",
+-   "permission": "permission ",
+-   "need": "need”
+
+## Groups Collection
+
+-   "_id": mongoId
+-   "id": id,
+-   "channels": [
+        "channel"
+    ],
+-   "admins": [
+        "admin"
+    ],
+-   "banned": [],
+-   "members": [
+        " member"
     ]
-  }
-]
+
+
+
+## Users Collection:
+
+-   "_id": mongoId,
+-   "username": "username",
+-   "profile": "url to profile img",
+-   "email": " email ",
+-   "password": " password ",
+-   "groups": [],
+-   "roles": [
+       "user"
+    ]
+
+## Messages Collection:
+-   "_id": mongoId,
+-   "username": "username",
+-   "msg": "msg",
+-   "image": "image",
+-   "channel": "channel",
+-   "group": "groupId",
+-   "timeStamp": "time message was sent"
+
 
 # Accept group
 ## Method:
@@ -78,38 +81,22 @@ All files are stored as JSON arrays with example below
 - groupId: string, ID of the group the user is requesting to join. This ID is passed as a string but will be parsed as an integer while searching for the group.
 
 ## Return Values:
-- Internal server errors (e.g., file read/write issues or corrupted data):
-    - { "error": "Internal server error (file)" }
-- Error Parsing file:
-    - { error: "Corrupted (file) data" }
-- User not found:
-    - { "error": "User not found" }
-- User is banned:
-    - { error: "User is banned and cannot join a group" }
+- Internal server errors:
+    - { "error": "Internal server error" }
 - Group not found:
-    - { "error": "Group not found" }
+    - { "success": false, "message": "Group not found" }
 - User is already a member of the group:
-    - { "error": "User is already a member of this group" }
-- Failed to upload file:
-    - { error: "Failed to update (filename) file" }
+    - { "success": false, "message": "User is already in the group" }
+- Failed to update the user:
+    - { "success": false, "message": "Failed to update the user" }
+- Failed to update the group:
+    - { "success": false, "message": "Failed to update the group" }
 - On success:
-    - { valid: true }
+    - { "success": true, "message": "User added to the group" }
 ## How It Works:
-1.	User Existence Check:
-    - The system checks if the user exists in Users.txt. If the user does not exist, the appropriate error is returned
-2.	Banned User Check:
-    - If the user is found, the system then checks if the user is banned. If the user is banned, the appropriate error is returned
-3.	Group Existence Check:
-    - The system checks if the specified group exists in Groups.txt. If the group does not exist, the appropriate error is returned
-4.	Group Membership Check:
-    - The system checks if the user is already a member of the group. If the user is already a member, the appropriate error is returned
-5.	Update Files
-    - The user's name is added to the group's member list in Groups.txt
-    - The group ID is added to the user's list of groups in Users.txt.
-    - The user's group request is removed from groupRequests.txt.
-6.	Return Success:
-    - Once the files are updated successfully, the system returns:
-      { "valid": true }.
+Adds a user to a group by verifying the user and group exist, preventing duplicate membership, updating both user and group records, and removing any related join requests from the groupRequests collection.
+
+
 # Accept Users:
 ## Method:
 -	HTTP POST
@@ -120,32 +107,16 @@ All files are stored as JSON arrays with example below
 -	email (string): The email address of the new user.
 -	password (string): The password of the new user.
 ## Return Values:
-- Internal server errors (reading file):
-    - { "error": "Internal server error (file name)" }
-- Error parsing file:
-    - { "error": "Corrupted (file) data" }
-- Request not found for user:
-    - { "error": "Request not found" }
-- Failed to update file:
-    - { "error": "Failed to update (file name) file" }
-- On success:
-    - { valid: true, userId: user.id }
+-   User already exists:
+    -   { "success": false, "message": "User already exists" }
+-   No pending account request found:
+    -   { "success": false, "message": "No account request found for this user" }
+-   On successful registration:
+    -   { "success": true, "message": "User successfully registered", "userId": "<insertedId>" }
+-   Internal server error:
+    -   { "error": "Internal server error" }
 ## How it Works:
-1.	Create User Object:
-    - The API receives the username, email, and password in the request body and initializes a new user object with these properties. It also has groups set as an empty array, roles as an array with an element “user”, and an ID of null
-2.	Check for Existing Users:
-    - The system reads the users.txt file to check if any users already exist. If there is an error reading or parsing the file, the appropriate error is returned
-3.	Assign User ID:
-    - The new user is assigned an ID based on the existing users in the users.txt file. If the file is empty, the new user receives an ID of 1. Otherwise, the user ID is one more than the last user's ID.
-4.	Write New User to users.txt:
-    - Once the user ID is assigned, the new user is added to the users.txt file.
-5.	Remove User from Requests List:
-    - After the user is added to users.txt, the API reads the accountRequests.txt file and searches for the corresponding request for the user. If the request is found, it is removed from the list.
-6.	Update Requests File:
-    - After the user request is removed, the accountRequests.txt file is updated.
-7.	Return Success:
-    - Once the files are updates successfully the API returns:
-      { valid: true, userId: user.id }
+Checks if the user already exists; if not, verifies there is a pending account request for the username. If such a request exists, deletes it and inserts the new user record with default roles and profile image. Returns appropriate success or error messages.
 
 # addChannnels:
 ## Method:
@@ -155,27 +126,18 @@ All files are stored as JSON arrays with example below
 ## Parameters:
 - groupId (string): The ID of the group to which the channels should be added.
 - newChannels (string): the name of the new channel to add
-Return Values:
-1.	Internal server errors reading groups file:
-    - { "error": "Internal server error groups" }
-2.	Error parsing groups file:
-    - { "error": "Corrupted groups data" }
-3.	Group not found:
-    - { "error": "Group not found" }
-4.	Failed to update groups file:
-    - { "error": "Failed to update groups" } 
-5.	On Success:
-    - { success: true, channels: group.channels }
+## Return Values:
+-   Missing fields:
+    -   { "error": "Missing required fields" }
+-   Group not found:
+    -   { "error": "Group not found" }
+-   On success:
+    -   { "success": true, "channels": ["channel1", "channel2", ...] }
+-   Internal server error:
+    -   { "error": "Internal server error" }
 ## How it Works:
-1.	Read groups file
-    - The API reads the groups file and parses it
-2.	Find the group
-    - The API find the group in the parsed data
-3.	Add new channel 
-    - The new channel is pushed onto the groups channels array
-4.	Update groups file
-    - The updated groups file is written and returns
-      { success: true, channels: group.channels }
+Accepts a group ID and a list (or single) channel(s), verifies the group exists, then merges the new channels into the group's existing channel list while preventing duplicates, and updates the group document in the database.
+
 # Auth:
 ## Method:
 - HTTP POST
@@ -185,30 +147,22 @@ Return Values:
 -	username (string): The username of the user attempting to log in.
 -	password (string): The password of the user attempting to log in.
 ## Return values:
-1.	Internal server errors reading users file: 
-    - { error: "Internal server error (users)" }
-2.	Error Parsing users file
-    - { error: "Corrupted users data" }
-3.	On Success:
--   res.json({ ...user, valid: true });
-        example user: 
-        {
-        "id": 1,
-        "username": "exampleUser",
-        "email": "user@example.com",
-        "groups": [],
-        "roles": ["user"],
+-	Successful login (user found):
+    -	{
+        "id": "...",
+        "username": "...",
+        "email": "...",
+        "groups": [...],
+        "roles": [...],
         "valid": true
         }
-4.	Invalid login
-    - { valid: false }
+-	Invalid login (user not found or wrong credentials):
+    -	{ "valid": false }
+
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Read users file:
-    - Reads and parses the users file
-2.	Check if the username and password are correct
-    - Searches the users file as an array and checks if the username and password match any users
-3.	Returns:
-    - Either response with user data or valid = false for incorrect username or password
+Checks the MongoDB users collection for a user matching the provided username and password, returns the user details without the password on success, or a valid: false response if no match is found.
 
 # banUser:
 ## Method:
@@ -219,33 +173,18 @@ Return Values:
 -	id (string): The username of the user to be banned.
 -	currentGroup (string): The ID of the group from which the user is to be banned.
 ## Return Values:
-1.	Internal server errors (reading file):
-    - { "error": "Internal server error (users)" }
-2.	Error parsing file:
-    - { "error": "Corrupted (file) data" }
-3.	Group not found:
-    - { "success": false, "message": "Group not found" }
-4.	Super Admin cannot be banned:
-    - {   "error": "cannot remove a super admin" }
-5.	Failed to update file:
-    - {  "error": "Failed to update (file)" }
-6.	On Success:
-    - {  success: true }
+-	Success:
+    -	{ "success": true }
+-	User not found:
+    -	{ "error": "User not found" }
+-	Group not found:
+    -	{ "success": false, "message": "Group not found" }
+-	Attempt to ban super admin:
+    -	{ "error": "Cannot remove a super admin" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works
-1.	Read users file:
-Read and parse the users file
-2.	Check if the user is a super admin:
-Checks the users roles array for the ‘superAdmin’ role
-3.	Remove group user from the group :
-Find the user in the users file and removes the groupId from the users groups array 
-4.	Read groups file:
-Reads and parses the groups file
-5.	Find and modify the group 
-Find the group and remove the user from the groups members array
-6.	Update files:
-Write the updates data to the files
-7.	Return success:
-    - Return { success: true }
+Validates that the user exists and is not a super admin, removes the specified group from the user’s groups array, removes the user from the group’s members array, adds the user to the group’s banned array, and returns a success status.
 
 # BanUserChannel
 ## Method:
@@ -256,32 +195,20 @@ Write the updates data to the files
 -	id (string): The username of the user to be banned from the channel.
 -	currentGroup (string): The ID of the group whose channel the user is being banned from. Will be parsed as an integer when find the group
 ## Return Values:
-1.	Internal server errors reading file:
-    - {  "error": "Internal server error (file)" }
-2.	Error parsing file:
-    - {  "error": "Corrupted (file) data" }
-3.	Channel not found for the group:
-    - {  "success": false, "message": "Channel not found for the group" }
-4.	Super Admin cannot be banned:
-    - {  "error": "cannot remove a super admin" }
-5.	Failed to update channels file:
-    - {  "error": "Failed to update channels" }
-6.	On Success:
-    - {  success: true }
+-	Success:
+    -	{ "success": true }
+-	User not found:
+    -	{ "error": "User not found" }
+-	Channel not found for the group:
+    -	{ "success": false, "error": "Channel not found for the group" }
+-	Attempt to ban super admin:
+    -	{ "error": "Cannot remove a super admin" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 
 ## How It Works:
-1.	Read users.txt:
-    - Read the users.txt file and parse it
-2.	Check if the user is a super admin:
-    - Check the users roles array for the ‘superAdmin’ role
-3.	Read channels.txt:
-    - Read and parse channels.txt
-4.	Find the right channel and modify it:
-    - Find the right channel in the channels.txt file and remove the user from the members array
-5.	Save data:
-    - Update the users.txt file and the channels.txt file
-6.	Return success:
-    - Return: { success: true }
+Verifies the user exists and is not a super admin, finds the channel by group ID, removes the user from the channel’s members array if present, adds the user to the banned array without duplicates, and returns a success response.
+
 # Create channel:
 ## Method:
 -	HTTP POST
@@ -291,40 +218,17 @@ Write the updates data to the files
 -	groupId (string): The ID of the group where the channel will be created.
 -	name (string): The name of the new channel.
 -	members (string): the username of the user creating the channel
-Return Values:
-1.	Missing required fields (groupId, name, members):
-    - {  "error": "Missing required fields: groupId, name, members" }
-2.	Internal server errors (reading groups file):
-    - {  "error": "Internal server error (groups)" }
-3.	Error parsing groups file:
-    - {  "error": "Corrupted groups data" }
-4.	Group not found:
-    - {  "error": "Group not found" }
-5.	Internal server errors (reading channels file):
-    - {  "error": "Internal server error (channels)" }
-6.	Error parsing channels file:
-    - {  "error": "Corrupted channels data" }
-7.	Failed to write channels file:
-    - {  "error": "Failed to write channels file" }
-On Success:
-    - {  valid: true, channelId: channelData.id }
+## Return Values:
+-	Success:
+    -	{ "valid": true, "channelId": "newChannelId" }
+-	Missing required fields:
+    -	{ "error": "Missing required fields" }
+-	Group not found:
+    -	{ "error": "Group not found" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How It Works:
-1.	Make the channels object:
-    - Create a json object called channelData that contains a base id of 0 the given groupId, the given channel name, an array for admins that starts with the creator of the channel, an empty array for banned members, and a members array with the creator as the channel member.
-2.  Read the users file
-    - await the users file to find all super admins and add them as members to the channel
-3.	Read the groups file 
-    - Read and parse the groups.txt file
-4.	Check if the group exists
-    - Check the groups file for the group we are trying to add the channel to
-5.	Read the channels file 
-    - Read and parse the channels file
-6.	Find the highest ID in the channels file
-    - Search the channels file for the channel with the highest ID then set that id +1 as the new channels id
-7.	Add the channel
-    - Add the channel to the channels file
-8.	Return Success:
-    - {  valid: true, channelId: channelData.id }
+The endpoint verifies the group exists, includes any super admins of the group automatically as both members and admins of the new channel, assigns a new unique channel ID, inserts the new channel into the database with members and admins, and adds the channel name to the group’s channel list.
 
 # Create Groups:
 ## Method:
@@ -336,38 +240,16 @@ On Success:
 -	channels (string): An array of channels for the group (at least one channel should be specified).
 -	members (array of strings): An array containing the username of the group creator (the first user will be the admin and only member at first).
 ## Return Values:
-1.	Error reading file:
-    - {  "error": "Internal server error (file)" }
-2.	Corrupted file:
-    - {  "error": "Corrupted (file) data" }
-3.	Failed to write to file:
-    - {  "error": "Failed to write (file) file" }
-4.	User not found in users.txt:
-    - {  "success": false, "message": "User not found" }
-On Success:
-    - {  valid: true, groupId: groupData.id }
+-	Success:
+    -	{ "valid": true, "groupId": <newGroupId> }
+-	Missing required fields:
+    -	{ "error": "Missing required fields" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 	
 ## How It Works:
-1.  Reads the users file 
-    - Read and parse the users file
-2.  Read the groups file    
-    - read and parse the groups file
-3.	Find the new groupId
-    - Finds the highest group id and adds 1 for the new group is
-4.  Find all super admins
-    - Find all super admins and add them to the groups members array
-5.	Updates groups file
-    - Updates changes to the groups file
-6.	Reads users file
-    - Read and parses the user file
-7.	Finds the user 
-    - Find the user in the file
-8.	Updates user file 
-    - Updates the user file to include the creator as a member of the group
-9.	Repeats create channel API
-    - Creates the base channel given the new channel name and new group Id. The same as what the createChannels API does
-10.	Returns Success:
-    - Returns: { valid: true, groupId: groupData.id }
+Creates a new group with a unique numeric ID and adds the specified members as both group members and admins, automatically including all superAdmins as members and admins. Updates all involved users’ group memberships accordingly. Then, creates an initial channel linked to the new group, initializing it with the same members and admins.
+
 # Create Group Join Request;
 ## Method:
 -	HTTP POST
@@ -377,27 +259,23 @@ On Success:
 -	username (string): The username of the user requesting to join a group.
 -	groupId (string): The ID of the group the user wants to join.
 ## Return Values:
-1.	Error reading file:
-    - {  "error": "Internal server error (file)" }
-2.	Corrupted file:
-    - {  "error": "Corrupted (file) data" }
-3.	Error writing to file:
-    - {  "error": "Failed to update (file) file" }
-4.	Request already exists:
-    - {  valid: false}
-
-5.	On Success: 
-    - {  valid: true }
+-	Missing fields:
+    -	{ "error": "Missing username or groupId" }
+-	Group not found:
+    -	{ "error": "Group not found" }
+-	User banned from the group:
+    -	{ "error": "You are banned from this group" }
+-	User already a member:
+    -	{ "error": "You are already in this group" }
+-	Request already pending:
+    -	{ "valid": false, "message": "Request already pending" }
+-	Success:
+    -	{ "valid": true }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 
 ## How It Works:
-1.	Create user object
-    - Creates a user object with username and the passed username, groupId as the passed groupID, status as “pending”, permission as “user” and the need as “Join Permission” 
-2.	Read requests file
-    - Reads and parses the request file
-3.	Checks the request already exists
-    - Checks if the user is already in the group by checking the username against the members array of the group
-4.	Updates file
-    - Updates the request file with the request
+Validates the input, checks if the group exists, ensures the user is neither banned nor already a member, then inserts a new pending join request for the group if none already exists.
 
 # Create User Request:
 ## Method:
@@ -409,38 +287,18 @@ On Success:
 -	email (string): The email address of the user requesting to register.
 -	password (string): The password of the user requesting to register.
 ## Return Values:
-Error Scenarios:
-1.	Error reading file:
-    - {  "error": "Internal server error (file)" }
-2.	Corrupted file:
-    - {  "error": "Corrupted (file) data" }
-3.	Error reading file:
-    - {  "error": "Internal server error (file)" }
-4.	If the username exists:
-    - {  valid: false }
-5.	If the username is already requested:
-    - {  valid: false }
-6.	On Success:
-    - {  valid: true }
+-	Missing fields:
+    -	{ "valid": false, "error": "Missing username, email, or password" }
+-	Username already exists:
+    -	{ "valid": false, "message": "Username already exists" }
+-	Registration request already submitted:
+    -	{ "valid": false, "message": "Registration request already submitted" }
+-	Success:
+    -	{ "valid": true }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How It Works:
-1.	Crates user object
-    - Creates a user object with a null id, username as the passed username, email as the passed email, password as the passed password, roles as an empty array, and groups as an empty array
-2.	Reads the users file
-    - Reads and parses the users file
-3.	Checks if the username exists
-    - Checks if the username exists in users file and returns { valid: false } if it is
-4.	Find the highest user id
-    - Find the highest id in the users file the update the currently null id
-5.	Creates request object
-    - Creates a request object with username, email, and password as the passed values
-6.	Read request file
-    - Reads and parses the request file
-7.	Check if the username is already requested
-    - Checks if the username is already in the requests file and returns { valid: false } if it is
-8.	Update requests file
-    - Updates the requests file
-9.	On success:
-    - { valid: true }
+Validates that all required fields are provided, checks if the username is already taken or if a registration request is pending, and if not, saves the new registration request for approval.
 
 # Decline
 ## Method:
@@ -451,24 +309,20 @@ Error Scenarios:
 -	username (string): The username of the user whose request is being declined.
 -	file (string): Specifies whether the request is related to a group (groupRequests) or account (accountRequests).
 ## Return Values:
-1.	Error reading request file:
-    - {  "error": "Internal server error (requests)" }
-2.	Corrupted requests data (unable to parse file):
-    - {  "error": "Corrupted requests data" }
-3.	Error writing to request file:
-    - {  "error": "Failed to update requests file" }
+-	Missing parameters:
+    -	{ "error": "Missing username or file type" }
+-	Invalid file type:
+    -	{ "error": "Invalid file type specified" }
+-	Request not found:
+    -	{ "valid": false, "message": "Request not found" }
+-	Success:
+    -	{ "valid": true }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How It Works:
-1.	create user object:
-    - creates a user object with username and file as keys with the values of the same name being passed to the API
-2.	read request file
-    - reads and parses the request file
-3.	finds the request in the request file
-    - Searches the requests file until the username matches and removes it from the file
-4.	updates the request file
-    - write the updates to requested the file
+Removes a pending user request from either the accountRequests or groupRequests collection based on the specified file type, effectively declining the user’s request.
 
 # Delete Channel:
-
 ## Method:
 -	HTTP POST
 ## Endpoint:
@@ -477,36 +331,19 @@ Error Scenarios:
 -	groupId (string): The ID of the group from which the channel is being deleted.
 -	channel (string): The name or ID of the channel to be deleted.
 ## Return Values:
-1.	Error reading the file:
-    - {  "error": "Internal server error (file)" }
-2.	Corrupted file data:
-    - {  "error": "Corrupted (file) data" }
-3.	Group not found:
-    - {  "error": "Group not found" }
-4.	Error writing to the groups file:
-    - {  "error": "Failed to update groups" }
-5.	Channel not found in channels file:
-    - {  "error": "Channel not found" }
-6.	On success:
-    - {  valid: true }
+-	Missing parameters:
+    -	{ "error": "Missing groupId or channel" }
+-	Group not found:
+    -	{ "error": "Group not found" }
+-	Channel not found:
+    -	{ "error": "Channel not found" }
+-	Success:
+    -	{ "valid": true }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 
 ## How it works:
-1.	Reads the groups file:
-    - Reads and parses the groups file
-2.	Checks the group exists:
-    - Checks the groups file for the groupId
-3.	Removes the channel
-    - Removes the channel from the groups channels array
-4.	Updates the groups file
-    - Saves the changes to the groups channels array to the groups file
-5.	Reads the channels file
-    - Reads and parses the channels file
-6.	Find the channel 
-    - Finds the channel in the channels file
-7.	Deletes the channel
-    - Removes the channel from the file
-8.	Updates the channels file
-    - Updates the channels file with the missing channel
+Removes the channel name from the group’s channels array and deletes the channel document from the channels collection by its _id, ensuring the channel is fully removed from both group and channels collections.
 
 # Delete Groups:
 ## Method:
@@ -516,37 +353,16 @@ Error Scenarios:
 ## Parameters:
 -	groupId (string): The ID of the group to be deleted.
 ## Return Values:
-1.	Error reading the file:
-    - {  "error": "Internal server error (file)" }
-2.	Corrupted file data 
-    - {  "error": "Corrupted (file) data" }
-3.	Group not found:
-    - {  "success": false, "message": "Group not found" }
-4.	Error writing to the file:
-    - {  "error": "Failed to update (file) " }
-5.	On Success:
-    - {  success: true }
+-	Missing or invalid groupId:
+    -	{ "error": "Missing or invalid groupId" }
+-	Group not found:
+    -	{ "success": false, "message": "Group not found" }
+-	Success:
+    -	{ "success": true }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Reads the groups file
-    - Reads and parses the groups file
-2.	Finds the group 
-    - Find the group in the groups file
-3.	Removes the group
-    - Removes the group from the groups file
-4.	Update the groups file
-    - Updates the new groups file
-5.	Read the channels file
-    - Reads and parses the channels file
-6.	Remove the channels
-    - Searches the channels file for all channels related to the group and deletes them
-7.	Update the channels file
-    - Save the new channels file
-8.	Read the users file
-    - Reads and parses the users file
-9.	Remove the group for all users in the group
-    - Remove the group from the groups array from all users in the group
-10.	 Return success:
-    - { success: true }
+Deletes the group document by its ID, removes all channels and messages associated with the group, and updates all users to remove the group from their membership lists, ensuring complete cleanup of the group and all related data.
 
 # Delete User:
 ## Method:
@@ -556,29 +372,36 @@ Error Scenarios:
 ## Parameters:
 -	username (string): The username of the user to be deleted.
 ## Return Values:
-1.	Error reading the file:
-    - {  "error": "Internal server error (file)" }
-2.	Corrupted file data:
-    - {  "error": "Corrupted (file) data" }
-3.	User not found:
-    - {  "success": false, "message": "User not found" }
-4.	Error writing to the file:
-    - {  "error": "Failed to update (file)" }
-5.	On success:
-    - {  "error": "Failed to update users.txt" }
+-	Missing username:
+    -	{ "error": "Missing username" }
+-	User not found:
+    -	{ "success": false, "message": "User not found" }
+-	Success:
+    -	{ "success": true, "message": "User deleted and removed from all groups" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
+
 ## How it Works:
-1.	Read users file
-    - Read and parse the users file
-2.	Finds the user and removes
-    - Finds the user index in the users file and removes them
-3.	Reads the groups file 
-    - Read and parse the groups file
-4.	Remove user from groups they are in
-    - Checks all groups in the groups file and removes the user from the members array of each group
-5.	Update users file 
-    - Update the new users file
-6.	Update groups file
-    - Update the new groups file
+Deletes the user document from the users collection, then removes the username from all members arrays in both groups and channels collections to ensure the user is fully removed from the system.
+
+# editProfile:
+## Method:
+-	HTTP POST
+## Endpoint:
+-	/api/editProfile
+## Parameters:
+-	img (string): The filename of the new profile image.
+-	username (string): The username of the user whose profile image is being updated.
+## Return Values:
+-	Missing parameters:
+    -	{ "error": "No Image or Username" }
+-	Success:
+    -	{ "success": true, "message": "Profile Image Updated" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
+## How It works:
+Updates the specified user’s profile image URL in the users collection, linking it to the new image filename provided.
+
 
 # getAdmin:
 ## Method:
@@ -589,26 +412,15 @@ Error Scenarios:
 -	id (string): The ID of the group.
 -	username (string): The username of the user whose admin status is being checked.
 ## Return Values:
-1.	Error reading the file:
-    - {  "error": "Internal server error (file)" }
-2.	Corrupted file data:
-    - {  "error": "Corrupted (file) data" }
-3.	On success:
-    - {  isAdmin, isSuperAdmin }
+-	Missing parameters:
+    -	{ "error": "Missing groupId or username" }
+-	Success:
+    -	{ "isAdmin": true|false, "isSuperAdmin": true|false }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 
 ## How It works:
-1.	Read groups 
-    - Read and parse the group file
-2.	Instantiate variables
-    - Instantiate the isAdmin and isSuperAdmin variables
-3.	Check if the use is a group admin
-    - Find the group and check the groups admins array for the username if it is found set isAdmin to true
-4.	Read users file 
-    - Read and parse the users file
-5.	Check if the user is a super admin
-    - Find the user and check if the users roles array includes ‘superAdmin’ if it does set isSuperAdmin to true
-6.	On Success:
-    - return: { isAdmin, isSuperAdmin }
+Checks if the specified user is an admin of the given group by verifying if the username exists in the group's admins array. Then, it checks if the user has the role superAdmin in the users collection. Returns the combined admin and superAdmin status as boolean flags.
 
 # getChannels
 ## Method:
@@ -618,27 +430,17 @@ Error Scenarios:
 ## Parameters:
 -	id (string): The ID of the group whose channels are being checked.
 -	username (string): The username of the user whose allowed channels are being fetched.
-Return Values:
-1.	Error reading the file:
-    - {  "error": "Internal server error (file)" }
-2.	Corrupted file data:
-    - {  "error": "Corrupted (file) data" }
-3.	On Success:
+## Return Values:
+-	Missing parameters:
+    -	{ "error": "Missing groupId or username" }
+-	Group not found:
+    -	{ "error": "Group not found" }
+-	Success:
+    -	{ "channels": [ { "_id": "mongoId", "name": "name" }, ... ], "members": ["member1", "member2", ...] }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How It Works:
-1.	Read groups file 
-    - Read and parse the groups file
-2.	Find the group
-    - Find the group and gets is members and channels
-3.	Read the channels file
-    - Read and parse the channels file
-4.	Find channels in channel file
-    - For all channels in the groups channels array find them in the channels file
-5.	Check if banned
-    - Check if the user is banned from the current channel if they are add them to the banned channels array
-6.	Add the channel
-    - Check if the user is a member of the channel and not banned if they aren’t banned and are a member add the channel to the allowed channel array.
-7.	On success
-    - Return: { channels: allowedChannels, members }
+The endpoint first finds the group document by the provided groupId. If the group exists, it retrieves the list of channel names associated with that group. Next, it queries the channels collection to find channels that belong to the group and match the group's channel names. It then filters these channels to include only those where the specified user is a member and is not banned. Finally, it returns the filtered list of allowed channels with their _id and name, along with the list of members belonging to the group.
 
 # GetGroupRequests:
 ## Method:
@@ -648,19 +450,14 @@ Return Values:
 ## Parameters:
 -	groupId (string): The ID of the group for which the requests are being fetched.
 ## Return Values:
-1.	Error reading the requests.txt file:
-    - {  "error": "Internal server error (requests)" }
-2.	Corrupted data (unable to parse requests.txt):
-    - {  "error": "Corrupted requests data" }
-3.	On Success: 
-    - {  response: response }
+-	Missing parameters:
+    -	{ "error": "Missing groupId in request body" }
+-	Success:
+    -	{ "response": [ array of group request objects ] }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Read the requests file:
-    - Read and parse the groups requests file
-2.	Get all requests with the group idL
-    - Get all requests from the requests file given the passed groupId
-3.	On success:
-    - On success return all the requests { response: response }
+The endpoint first validates that a groupId is provided in the request body. It then connects to the MongoDB database and queries the groupRequests collection for all requests matching the provided groupId (stored as a string). The resulting array of request documents is returned in the response under the response key. If any errors occur during the process, a 500 status with an error message is returned.
 
 # GetGroups
 ## Method:
@@ -670,19 +467,45 @@ Return Values:
 ## Parameters:
 -	username (string): The username of the user whose groups are being retrieved.
 ## Return Values:
-1.	Error reading the users.txt file:
-    - {  "error": "Internal server error (users)" }
-2.	Corrupted data (unable to parse users.txt):
-    - {  "error": "Corrupted users data" }
-3.	On Success:
-    - {  groups: groups }
+-	Missing parameters:
+    -	{ "error": "Missing username" }
+-	Success:
+    -	{ "groups": [ "groupId1", "groupId2", ... ] }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Read the users file:
-    - Read and parse the users file
-2.	Find the user:
-    - Find the user in the groups file and get its groups array
-3.	On Success:
-    - Return the users groups array { groups: groups }
+The endpoint first checks that the username parameter is provided in the request body. It then connects to the database and looks up the user document in the users collection. From the user document, it retrieves the list of groups the user belongs to. For each group, it queries the groups collection to verify that the user is not banned from that group. Only groups where the user is not banned are included in the response. The filtered list of group IDs is returned as the groups array in the response.
+
+
+# getRecentMessages:
+## Method:
+-   HTTP POST
+## Endpoint:
+-   /api/getRecentMessages
+## Parameters:
+-   channel (object): The channel object containing at least the _id field representing the channel ID.
+-   group (string): The ID of the group associated with the messages.
+## Return Values:
+-   Missing or invalid parameters:
+
+    -   { "error": "Missing or invalid channel or group" }
+-   Success:
+    -   [
+        {
+            "_id": "mongoId",
+            "channel": "channelId",
+            "group": "groupId",
+            "username": "username",
+            "msg": "text",
+            "timeStamp": "timestamp",
+            "profileImage": "profile_image_url_or_null"
+        },
+        ...
+        ]
+-   Internal server error:
+    -   { "error": "Internal server error" } (response status 500)
+## How It Works:
+The endpoint connects to the database and retrieves the last 5 messages for the provided channel._id and group ID, sorted by timestamp in descending order. It extracts the unique usernames from these messages and queries the users collection to fetch their profile images. The messages are then augmented with the corresponding user’s profile image (or null if none exists) before being returned in the response.
 
 # Get User Requests:
 ## Method:
@@ -692,15 +515,12 @@ Return Values:
 ## Parameters:
 -	None (Data is fetched from the file accountRequests.txt).
 ## Return Values:
-1.	Error reading the accountRequests.txt file:
-    - {  "error": "Internal server error (requests)" }
-2.	Corrupted data (unable to parse accountRequests.txt):
-    - {  "error": "Corrupted requests data" }
-3.	On Success:
-     - {  requests }
+-	Success:
+    -	{ "requests": [ /* array of account request objects */ ] }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Reads the request file
-    - Reads the user requests file and returns it { requests }
+The endpoint connects to the MongoDB database and queries the accountRequests collection to retrieve all stored account request documents. These requests are returned as an array under the requests key in the JSON response. If any error occurs during the process, a 500 status code is returned with an appropriate error message.
 
 
 # Join Channels:
@@ -712,26 +532,15 @@ Return Values:
 -	username (string): The username of the user attempting to join the channel.
 -	newChannel (string): The name of the channel the user is attempting to join.
 ## Return Values:
-1.	Error Scenarios:
-2.	Error reading the channels.txt file:
-    - {  “error”: “Internal server error (channels)” }
-3.	Error parsing the channels.txt file:
-    - {  “error”: “Corrupted channels data” }
-4.	Channel not found:
-    - {  “valid”: false, }
-5.	User is banned from the channel:
-    - {  “valid”: false }
-6.	Error writing to the channels.txt file:
-    - {  “error”: “Failed to update channels” }
-7.	On Success:
-    - {  valid: true }
+-	User is valid to join the channel:
+    -	{ "valid": true }
+-	User is not allowed to join the channel (e.g., user is banned or the channel doesn't exist):
+    -	{ "valid": false }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Read the channels file:
-    - Read and parse the channels file 
-2.	Find the channel:
-    - Find the channel in the channels file then check if the user is banned from the channel. If they are return the corresponding error. If they aren’t check if they are already a member of the channel if they aren’t add them to the channel. If they are return the corresponding error.
-3.	Update channels file
-    - Update the channels file
+The endpoint checks whether the username and newChannel object are provided in the request body. It connects to the MongoDB database and looks for the specified channel in the channels collection using the channel’s _id. If the channel is found, it checks whether the user is banned from the channel. If the user is not banned, the endpoint verifies if the user is already a member of the channel. If not, the user is added to the channel’s members list, and the channel document is updated in the database. Finally, the endpoint responds with a valid status indicating whether the user was successfully added to the channel.
+
 
 # Kick user channel:
 ## Method:
@@ -742,29 +551,20 @@ Return Values:
 -	id (string): The username of the user being removed from the channel.
 -	currentChannel (string): The name of the channel from which the user will be removed.
 ## Return Values:
-1.	Error reading the file:
-    - {  "error": "Internal server error (file)" }
-2.	Error parsing file data:
-    - {  "error": "Corrupted (file) data" }
-3.	Super Admin cannot be removed:
-    - {  "error": "cannot remove a super admin" }
-4.	Channel not found:
-    - {  "success": false, "message": "Channel not found for the group" }
-5.	User is not a member of the channel:
-    - {  "success": false, "message": "User is not a member of the channel" }
-6.	Error writing to the channels.txt file:
-    - {  "error": "Failed to update channels" }
+-	User not found:
+    -	{ "error": "User not found" }
+-	Success (user removed):
+    -	{ "success": true, "message": "User removed from channel" }
+-	Cannot remove a super admin:
+    -	{ "error": "cannot remove a super admin" }
+-	Channel not found:
+    -	{ "success": false, "message": "Channel not found" }
+-	User is not a member of the channel:
+    -	{ "success": false, "message": "User is not a member of the channel" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Read the users file
-    - Read and parse the users file
-2.	Check if the user is a super admin
-    - Find the user in the users file using id and check if their roles include ‘superAdmin’ if they do return the corresponding error
-3.	Read the channels file 
-    - Read and parse the channels file
-4.	Find the channel
-    - Find the channel in the channels file and remove the user from the channel if the channel exists and the user is a member of the channel if not return the corresponding errors
-5.	Update the channels file
-     - Write the updates to the channels file
+The endpoint first checks if the username and currentChannel parameters are provided. It then connects to the MongoDB database and queries the users collection to fetch the user document corresponding to the provided username. If the user is a superAdmin, they cannot be removed from the channel, and an error message is returned. The endpoint then fetches the channel document using the currentChannel name. If the channel exists, it checks whether the user is a member of the channel. If the user is found in the channel’s members list, they are removed, and the channel document is updated in the database. Finally, the response indicates whether the operation was successful, with a message explaining the result.
 
 # Kick the user from a group:
 ## Method:
@@ -775,33 +575,20 @@ Return Values:
 -	id (string): The username of the user being removed from the group.
 -	currentGroup (string): The ID of the group from which the user will be removed.
 ## Return Values:
-1.	Error reading file:
-    - {  "error": "Internal server error (file)" }
-2.	Error parsing file data:
-    - {  "error": "Corrupted (file) data" }
-3.	Group not found:
-    - {  "success": false, "message": "Group not found" }
-4.	User not found in the group's members list:
-    - {  "success": false, "message": "User is not a member of the group" }
-5.	Super Admin cannot be removed:
-    - {  "error": "cannot remove a super admin" }
-6.	User not found in the users file:
-    - {  "success": false, "message": "User not found in users file" }
-7.	Error writing to file:
-    - {  "error": "Failed to update (file)" }
-8.	On Success:
-    - {  success: true }
+-	Success (user removed):
+    -	{ "success": true }
+-	Group not found:
+    -	{ "success": false, "message": "Group not found" }
+-	User is not a member of the group:
+    -	{ "success": false, "message": "User is not a member of the group" }
+-	User not found in users collection:
+    -	{ "success": false, "message": "User not found in users collection" }
+-	Cannot remove a super admin:
+    -	{ "error": "Cannot remove a super admin" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Read the groups file
-    - Read the groups file
-2.	Remove the user from the group
-    - Check the group exists, check if the user is in the groups members array, if they don’t exit or aren’t a member send an error if they do remove the user from the group
-3.	Read the users file
-    - Read and parse the users file
-4.	Check the user isn’t a super admin
-    - Check the users roles array for the ‘superAdmin’ role if they are one return an error if they aren’t remove group from the users groups array
-5.	Update the files
-    - Write the updates to both users and groups files
+The endpoint checks if the group exists and if the user is a member. If the user is not a member, it returns an error. If the user is a super admin, they cannot be removed, and an error is returned. Otherwise, the user is removed from the group’s members and the group is removed from the user's groups. The operation is successful if no errors occur.
 
 
 # Leave group:
@@ -814,29 +601,24 @@ Return Values:
 -	id (string): The username of the user to be banned from the group.
 -	currentGroup (string): The ID of the group from which the user will be banned.
 ## Return Values:
-1.	Error reading the file:
-    - {  "error": "Internal server error (file)" }
-2.	Error parsing file data:
-    - {  "error": "Corrupted (file) data" }
-3.	Group not found:
-    - {  "success": false, "message": "Group not found" }
-4.	Error writing to the file:
-    - {  "error": "Failed to update (file)" }
-5.	On Success:
-    - {  success: true }
+-	Missing username or group ID:
+    -	{ "success": false, "message": "Missing username or groupId" }
+-	User not found:
+    -	{ "success": false, "message": "User not found" }
+-	Admins cannot leave groups:
+    -	{ "success": false, "message": "Admins cannot leave groups" }
+-	Group not found:
+    -	{ "success": false, "message": "Group not found" }
+-	User not found in group members:
+    -	{ "success": false, "message": "User not found in group members" }
+-	Group not found in user's groups:
+    -	{ "success": false, "message": "Group not found in user's groups" }
+-	Success (user successfully left the group):
+    -	{ "success": true, "message": "User left successfully" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works 
-1.	Read the groups file
-    - Read and parse the groups file
-2.	Check if the group exists
-    - Check if the group exists if it does remove the user from the groups members array 
-3.	Update the groups file
-    - Update the new groups file
-4.	Read the users file
-    - Read and parse the users file
-5.	Remove group from user
-    - Remove the groupId from the users groups array
-6.	Update user file
-    - Write the updates to the users file
+The endpoint checks if the name (username) and groupId are provided. It then connects to the database and checks if the user exists. If the user is an admin or super admin, they cannot leave the group. If the group exists, the user is removed from the group's members array and the group is removed from the user's groups array. If everything is successful, the user leaves the group, and the operation is confirmed with a success message.
 
 # Promote user to super admin:
 ## Method:
@@ -846,23 +628,14 @@ Return Values:
 ## Parameters:
 -	username (string): The username of the user who will be assigned the "superAdmin" role.
 ## Return Values:
-1.	Error reading users.txt:
-    - {  "error": "Internal server error (users)" }
-2.	Error parsing users.txt:
-    - {  "error": "Corrupted users data" }
-3.	User not found:
-    - {  "success": false, "message": "User not found in users file" }
-4.	Error writing to users.txt:
-    - {  "error": "Failed to update users" }
-5.	On Success:
-    - {  success: true }
+-	Missing username:
+    -	{ "success": false, "message": "User not found" }
+-	Success (User updated as super admin and added to all groups and channels):
+    -	{ "success": true, "message": "User "username" is now a superAdmin, added to all groups and channels, and updated their groups array" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works
-1.	Read the users file
-    - Read and parse the users file
-2.	Find the user
-    - Find the user in the users file and edit their roles array to include ‘superAdmin’
-3.	Update the users file
-    - Write the new users file
+The endpoint checks if the provided username exists. If the user is not already a super admin, they are added to the roles array with the "superAdmin" role. The user is then added to all groups and channels by updating their members array. Additionally, the user's groups array is updated with all the group IDs the user is now a part of. If successful, a success message is returned.
 
 
 # Promote user:
@@ -874,43 +647,44 @@ Return Values:
 -	id (string): The ID of the user to be promoted to admin.
 -	currentGroup (string or number): The ID of the group in which the user will be promoted to admin.
 ## Return Values:
-1.	Error reading the file:
-    - {  "error": "Internal server error (file)" }
-2.	Error parsing file data:
-    - {  "error": "Corrupted (file) data" }
-3.	Group Not Found:
-    - {  "success": false, "message": "Group not found" }
-4.	User Not Found in Group:
-    - {  "success": false, "message": "User is not a member of the group" }
-5.	User Already an Admin:
-    - {  "success": false, "message": "User is already an admin" }
-    - {  "error": "Corrupted users data" }
-6.	User Not Found in Users File:
-    - {  "success": false, "message": "User not found in users file" }
-7.	Error Writing to the file:
-    - {  "error": "Failed to update (file)" }
-8.	On Success:
-    - {  success: true }
+-	Missing group or user:
+    -	{ "success": false, "message": "Group not found" }
+-	User not a member of the group:
+    -	{ "success": false, "message": "User is not a member of the group" }
+-	User already an admin:
+    -	{ "success": false, "message": "User is already an admin" }
+-	Success:
+    -	{ "success": true }
+-	User not found in users collection:
+    -	{ "success": false, "message": "User not found in users collection" }
+-	Internal server error:
+    -	{ "error": "Internal server error" }
 ## How it works:
-1.	Read the groups file
-    - Read and parse the groups fie
-2.	Find the group
-    - Find the group in the groups file return an error if it isn’t found
-3.	Promote the user
-    - Add the user to the groups admins array, if the user isn’t already an admin if they are return an error
-4.	Read the users file
-    - Read and parse the users file
-5.	Update the users roles
-    - Update the users roles array to include the admin role
-6.	Update both files
-    - Write the updates to both files.
+This route promotes a user to an admin within a specified group. It first checks if the user is a member of the group. If they are not, it returns a "User is not a member" message. If the user is already an admin, it returns a "User is already an admin" message. If the user meets the conditions, the function adds the user to the admins array in the group and updates their roles array in the users collection to include "admin". If any error occurs during the process, an appropriate error message is returned.
 
 
+# sendMessage:
+## Method:
+-   POST
 
+## Endpoint:
+-   /api/sendMessage
+## Parameters:
+-   msg (object): The message details. (username, msg, image)
+-   channel (string): The ID of the channel where the message will be posted.
+-   group (string): The group ID the channel belongs to.
 
+## Return Values:
 
+-   Missing or invalid channel:
+    -   { "error": "Unknown Channel" }
+-   Success:
+    -   { "success": true, "message": "Message inserted", "data": { username:"username", "image": "image", "channel": "channel", "group": "group", "timeStamp": "current time"} }
+-   Internal server error:
+    -   { "error": "Internal server error" }
 
-
+## How It Works:
+This route sends a message to a specified channel within a group. It first checks if the channel exists; if not, an error is returned. Then, it inserts the message into the database with the sender’s username, message content, and timestamp. On success, it returns a confirmation with the message details.
 
 
 # Angular Architecture:

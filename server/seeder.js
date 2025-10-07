@@ -29,8 +29,7 @@ async function seedSuperUser() {
     email: "2",
     password: "123456",
     groups: [],
-    roles: ['superAdmin'],
-    profileImage: "profile.jpg"
+    roles: ['superAdmin']
     };
 
     // Insert the super user into the database
