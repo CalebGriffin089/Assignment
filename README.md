@@ -752,3 +752,29 @@ Services Directory (/services)
     - app-routing-module.ts: defines all the routes to navigate to each component
     - app.ts: the typescript file for app.html
     - app.html: the main html file where everything is displayed
+
+## Version controll 
+For version control, I used Git and GitHub, committing frequently after significant changes such as adding features or fixing bugs. Each commit included a message detailing the changes, additions, or the specific bug being addressed.
+
+## Layout
+The repo is structured as follows:
+
+-   Assignment is the root directory, containing Cypress tests, the server, and the Angular frontend.
+
+-   Cypress tests are located in Assignment/cypress/e2e, with support files in Assignment/cypress/e2e/support (e.g., login, logout, create group, create user).
+
+    -   The main test is in testFile.spec.ts in Assignment/cypress/e2e to ensure tests run in the necessary order.
+
+-   Server: The server resides in Assignment/server, with routes in Assignment/server/routes and integration tests in Assignment/server/integrationTests.
+
+    -   The server directory also includes:
+
+        -   Assignment/server/seeder for adding an initial superuser to the database.
+
+        -   Assignment/server/server to start the Express server, along with the command peerjs --port 3001 --path /peerjs to run the PeerJS server for video calls.
+
+-   Angular frontend is primarily in the src directory, housing components, models, and services:
+
+-   Components are in Assignment/src/app/components/{component name}, each with an HTML, TS, and CSS file (for chat) and tests (spec.ts).
+
+-   Services are under Assignment/src/app/services, containing directories for the video service (video), socket service (sockets), and image upload service (imgUpload), each with a TS file and the sockets service including a spec.ts for testing.
