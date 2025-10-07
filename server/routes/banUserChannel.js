@@ -1,5 +1,5 @@
 const express = require("express");
-const { MongoClient } = require("mongodb");
+const { MongoClient, ObjectId } = require("mongodb");
 
 const router = express.Router();
 
@@ -9,12 +9,10 @@ const dbName = "mydb";
 
 router.post("/", async (req, res) => {
   
-
-  
-
   try {
-    const { currentGroup, user } = req.body;
-    console.log("Ban request - id:", user, "channel/group:", currentGroup);
+    const { currentChannel, user, } = req.body;
+    console.log(user)
+    console.log("Ban request - id:", user, "channel/group:", currentChannel);
     await client.connect();
     const db = client.db(dbName);
     const usersCollection = db.collection("users");
@@ -32,24 +30,24 @@ router.post("/", async (req, res) => {
     }
 
     // Find channel by groupId (assuming currentChannel is groupId)
-    const channel = await channelsCollection.findOne({ groupId: String(currentGroup) });
+    const channel = await channelsCollection.findOne({ _id: new ObjectId(currentChannel) });
     if (!channel) {
       return res.status(404).json({ success: false, error: "Channel not found for the group" });
     }
 
     // Remove user from members array if present
     await channelsCollection.updateOne(
-      { groupId: String(currentGroup) },
+      { _id: new ObjectId(currentChannel) },
       { $pull: { members: user } }
     );
 
     // Add user to banned array if not already present
     await channelsCollection.updateOne(
-      { groupId: String(currentGroup) },
+      { _id: new ObjectId(currentChannel) },
       { $addToSet: { banned: user } }
     );
 
-    console.log(`User ${user} banned and removed from members list in the channel of group ${currentGroup}`);
+    console.log(`User ${user} banned and removed from members list in the channel of group ${currentChannel}`);
     res.json({ success: true });
   } catch (err) {
     console.error("Error processing ban request:", err);

@@ -1863,10 +1863,10 @@ describe("POST /api/banUserChannel", function () {
         await usersCollection.insertOne({ username: "user1", roles: ["user"], groups: ["1"] });
         await usersCollection.insertOne({ username: "user2", roles: ["user"], groups: ["1"] });
         await channelsCollection.insertOne(channel);
-
+        const ch = await channelsCollection.findOne({name: 'testChannel'});
         const res = await chai.request(app)
             .post("/api/banUserChannel")
-            .send({ currentGroup: "1", user: "user1" });
+            .send({ currentChannel: ch._id, user: "user1" });
 
         res.should.have.status(200);
         res.body.should.have.property("success").eql(true);
