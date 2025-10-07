@@ -722,31 +722,73 @@ This route sends a message to a specified channel within a group. It first check
 - app.html: the main html file where everything is displayed
 # Angular Architecture:
 ## Components Directory (/app/components):
-- /chat/
-    -	chat.html: The HTML template for the chat component
-    -	chat.ts: the typescript file for the logic and behaviour of the chat component
-- /create/
-    -	create.html: The HTML template for the Create component.
-    -	create.ts: the typescript file for the logic of the create component
-- /createGroups/
-    -	createGroups.html: The HTML template for the createGroups component.
-    -	createGroups.ts: the typescript file for the logic of the create component
-- /deleteUser/
-    -	deleteUser.html: The HTML template for the deleteUser component.
-    -	deleteUser.ts: the typescript file for the logic of the deleteUser component
-- /joinGrous/
-    -	joinGrous.html: The HTML template for the joinGrous component.
-    -	joinGrous.ts: the typescript file for the logic of the joinGrous component
-- /login/
-    -	login.html: The HTML template for the login component.
-    -	login.ts: the typescript file for the logic of the login component
-- /requests/
-    -	requests.html: The HTML template for the requests component.
-    -	requests.ts: the typescript file for the logic of the requests component
+-   /chat/:
+    -   chat.html: HTML template for the chat component.
+    -   chat.ts: TypeScript file for the chat component's logic and behavior.
+    -   chat.css: CSS file for styling the chat page.
+    -   This component allows users to chat in groups and channels, join video calls, and upload images. It utilizes:
+        -   Socket Service for sending messages and images.
+        -   Image Upload Service to upload images and send URLs.
+        -   Video Service to create a Peer object for video calls.
+-   /create/:
+    -  create.html: HTML template for the Create component.
+    -  create.ts: TypeScript file for logic.
+    -  create.spec.ts: TypeScript file for testing the Create component.
+    - Allows users to create account join requests.
+-   /createGroups/:
+    -   createGroups.html: HTML template.
+    -   createGroups.ts: TypeScript logic.
+    -   createGroups.spec.ts: TypeScript file for testing the Create Group component.
+    -   This admin-only component enables admins to create new groups with a base channel.
+-   /deleteUser/:
+    -   deleteUser.html: HTML template.
+    -   deleteUser.ts: TypeScript logic.
+    -   deleteUser.spec.ts: TypeScript file for testing the Delete User component.
+    -   Allows regular users to delete their accounts and admins to forcefully remove users (not available to regular users).
+-   /joinGroups/:
+    -   joinGroups.html: HTML template.
+    -   joinGroups.ts: TypeScript logic.
+    -   joinGroups.spec.ts: TypeScript file for testing the Join Groups component.
+    -   Enables users to request joining a group.
+-   /login/:
+    -   login.html: HTML template.
+    -   login.ts: TypeScript logic.
+    -   login.spec.ts: TypeScript file for testing the Login component.
+    -   Allows users to log in using their username and password.
+-   /requests/:
+    -   requests.html: HTML template.
+    -   requests.ts: TypeScript logic.
+    -   Admin-only page for approving or denying user account creation requests and promoting users to super admin.
+-   /editProfile/:
+    -   editProfile.html: HTML template.
+    -   editProfile.ts: TypeScript logic.
+    -   editProfile.spec.ts: TypeScript file for testing the Edit Profile component.
+    -   Allows users to upload a new profile picture using the Image Upload Service.
+    
+
+    
 Services Directory (/services)
-- /sockets/
+-   /sockets/
     -	sockets.spec.ts
     -	sockets.ts
+    -   Functionality:
+        -   Allows users to join and leave rooms (channels).
+        -   Handles sending and saving messages.
+        -   Displays messages sent to the channel (room)
+        -   Facilitates users joining and leaving video calls.
+-   /video/
+    -   video.ts: Contains the logic for the Call service.
+        -   Functionality:
+            -   Peer Management: Creates and manages a peer connection using PeerJS for real-time communication.
+            -   Local Stream: Captures the user's audio and video stream for use in video calls.
+            -   Call Handling: Allows users to call and answer calls with a peer.
+            -   Peer Communication: Establishes and maintains media connections with remote peers for video and audio communication.
+            -   Call Cleanup: Handles cleaning up media connections when the call is finished.
+-   /imgupload/
+    -   imgupload.spec.ts: Unit tests for the ImgUpload service.
+    -   imgupload.ts: Contains the logic for uploading images.
+    -   Functionality:
+        -   Image Upload: Sends image files (as FormData) to the server for processing and storage via an HTTP POST request to the server's /api/upload endpoint.
 ## Main Module File:
     - app-module.ts: the root module where components and services are declared and imported 
     - app-routing-module.ts: defines all the routes to navigate to each component

@@ -75,7 +75,6 @@ export class Sockets {
   }
 
   on(eventName: string): Observable<any> {
-    console.log("EventNAe",eventName)
     return new Observable(observer => {
       this.socket.on(eventName, (data: any) => {
         observer.next(data);
@@ -88,55 +87,11 @@ export class Sockets {
     });
   }
 
-  // Optionally, add emit wrapper
-  emit(eventName: string, data: any): void {
-    console.log(eventName, data);
-    this.socket.emit(eventName, data);
-  }
-
-  listen<T>(eventName: string): Observable<T> {
-    return new Observable<T>((subscriber) => {
-      this.socket.on(eventName, (data: T) => {
-        subscriber.next(data);
-      });
-    });
-  }
-
-  // Optional cleanup
-  removeListener(eventName: string): void {
-    this.socket.off(eventName);
-  }
-
-
  joinVideo(channelId: string, userId: string, peerId: string) {
     this.socket.emit('join-video', { channelId, userId, peerId });
   }
 
   leaveVideo(channelId: string, userId: string, peerId: string) {
     this.socket.emit('leave-video', { channelId, userId, peerId });
-  }
-
-  onVideoPeers(): Observable<{ channelId: string; peers: string[] }> {
-    return new Observable(observer => {
-      this.socket.on('video-peers', (data: { channelId: string; peers: string[] }) => {
-        observer.next(data);
-      });
-    });
-  }
-
-  onNewVideoPeer(): Observable<{ channelId: string; peerId: string }> {
-    return new Observable(observer => {
-      this.socket.on('new-video-peer', (data: { channelId: string; peerId: string }) => {
-        observer.next(data);
-      });
-    });
-  }
-
-  onVideoPeerLeft(): Observable<{ channelId: string; peerId: string }> {
-    return new Observable(observer => {
-      this.socket.on('video-peer-left', (data: { channelId: string; peerId: string }) => {
-        observer.next(data);
-      });
-    });
   }
 }
