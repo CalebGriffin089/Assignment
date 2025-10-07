@@ -787,6 +787,8 @@ The repo is structured as follows:
 
         -   Assignment/server/server to start the Express server, along with the command peerjs --port 3001 --path /peerjs to run the PeerJS server for video calls.
 
+        -   Assignment/server/userImages to store all images the users have uploaded for profile pictures or sending through chat messages
+
 -   Angular frontend is primarily in the src directory, housing components, models, and services:
 
 -   Components are in Assignment/src/app/components/{component name}, each with an HTML, TS, and CSS file (for chat) and tests (spec.ts).
