@@ -687,34 +687,6 @@ This route promotes a user to an admin within a specified group. It first checks
 This route sends a message to a specified channel within a group. It first checks if the channel exists; if not, an error is returned. Then, it inserts the message into the database with the sender’s username, message content, and timestamp. On success, it returns a confirmation with the message details.
 
 
-# Angular Architecture:
-## Components Directory (/app/components):
-- /chat/
-  -	chat.html: The HTML template for the chat component
-  -	chat.ts: the typescript file for the logic and behaviour of the chat component
--	/create/
-  -	create.html: The HTML template for the Create component.
-  -	create.ts: the typescript file for the logic of the create component
--	/createGroups/
-  -	createGroups.html: The HTML template for the createGroups component.
-  -	createGroups.ts: the typescript file for the logic of the create component
--	/deleteUser/
-  -	deleteUser.html: The HTML template for the deleteUser component.
-  -	deleteUser.ts: the typescript file for the logic of the deleteUser component
--	/joinGrous/
-  -	joinGrous.html: The HTML template for the joinGrous component.
-  -	joinGrous.ts: the typescript file for the logic of the joinGrous component
--	/login/
-  -	login.html: The HTML template for the login component.
-  -	login.ts: the typescript file for the logic of the login component
--	/requests/
-  -	requests.html: The HTML template for the requests component.
-  -	requests.ts: the typescript file for the logic of the requests component
-
-## Services Directory (/services)
--	/sockets/
-  -	sockets.spec.ts
-  -	sockets.ts
 ## Main Module File:
 - app-module.ts: the root module where components and services are declared and imported 
 - app-routing-module.ts: defines all the routes to navigate to each component
@@ -767,7 +739,7 @@ This route sends a message to a specified channel within a group. It first check
     
 
     
-Services Directory (/services)
+## Services Directory (/services)
 -   /sockets/
     -	sockets.spec.ts
     -	sockets.ts
